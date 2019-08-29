@@ -1,3 +1,8 @@
 # ipynb
 .ipynb*
 
+# .idea
+.idea
+__pycache__
+
+
