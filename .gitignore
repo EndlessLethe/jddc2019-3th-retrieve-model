@@ -1,9 +1,3 @@
-# data dir
-data
-
 # ipynb
 .ipynb*
 
-# provided model
-JDDC_Seq2Seq*
-JDDC_TFIDF*
