@@ -1,0 +1,3 @@
+## ignore all but readme.txt
+*
+!JDDC_readme.txt
