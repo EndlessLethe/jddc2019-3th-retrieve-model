@@ -1,4 +1,7 @@
 # README
-主要工作是对数据进行探索性数据分析EDA和数据清洗。
+
 
 目录结构：
+- data
+- code 
+- resource
