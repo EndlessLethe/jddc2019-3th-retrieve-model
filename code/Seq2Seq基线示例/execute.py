@@ -196,7 +196,7 @@ def decode():
     
     # Decode from standard input.
     test_path = gConfig['test']
-    result_path = gConfig['result']
+    result_path = gConfig['list_list_kanswer']
     with codecs.open(result_path,mode='w',encoding='utf-8') as wf:
         wf.truncate()
         wf.close()

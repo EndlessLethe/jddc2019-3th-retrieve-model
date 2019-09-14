@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # 测试集
     right_count = 0
     
-    file_result=open('dataSet/result.txt','w')
+    file_result=open('dataSet/list_list_kanswer.txt','w')
     with open("dataSet/trainAnswers.txt",'r',encoding = 'utf-8') as file_answer:
         line = file_answer.readlines()
            
