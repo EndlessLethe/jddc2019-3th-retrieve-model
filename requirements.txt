@@ -1,0 +1,6 @@
+matplotlib==2.2.3
+pandas==0.20.1
+numpy==1.15.1
+jieba==0.39
+gensim==3.8.0
+
