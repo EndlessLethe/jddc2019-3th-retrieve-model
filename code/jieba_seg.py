@@ -5,7 +5,7 @@ class JiebaSeg() :
         self.stopwords = [line.strip() for line in open(filepath_stopwords, 'r', encoding='utf-8').readlines()]
 
 
-    def cut(self, sentence, stopwords = True):
+    def cut(self, sentence, stopwords = False):
         seg_list = jieba.cut(sentence)  # 切词
 
         if stopwords:

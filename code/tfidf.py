@@ -23,8 +23,8 @@ class Tfidf():
     def load_data(self):
         data_chat = pd.read_csv(self.filepath_input, sep="\t", engine="python",
                                 warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header=None)
-        # logging.debug("Data size: " + str(data_chat.shape[0]))
-        return data_chat
+        # return data_chat[[0]]
+        return data_chat[[6]]
 
 
     def fit(self):
@@ -38,7 +38,7 @@ class Tfidf():
         texts = []
 
         for i in range(data_chat.shape[0]):
-            sentence = data_chat.iat[i, 6]
+            sentence = data_chat.iat[i, 0]
             list_word = list(self.seg_jieba.cut(sentence, True))
             texts.append(list_word)
         self.dictionary = corpora.Dictionary(texts)
@@ -138,11 +138,11 @@ class Tfidf():
     def get_center_sentence(self, list_list_kanswer, k):
         x_sim = np.zeros((k, k))
         for i in range(k):
-            if len(self.data_chat.iat[list_list_kanswer[i][0] + 1, 6]) <= 5: continue
+            if len(self.data_chat.iat[list_list_kanswer[i][0] + 1, 0]) <= 5: continue
             for j in range(k):
                 if i != j:
-                    x_sim[i][j] = self.cos_dist(self.data_chat.iat[list_list_kanswer[i][0] + 1, 6],
-                                                self.data_chat.iat[list_list_kanswer[j][0] + 1, 6])
+                    x_sim[i][j] = self.cos_dist(self.data_chat.iat[list_list_kanswer[i][0] + 1, 0],
+                                                self.data_chat.iat[list_list_kanswer[j][0] + 1, 0])
         #             print("i j: " + str(i) + " " + str(j) + " " + str(cos_dist(data_chat.iat[list_list_kanswer[i][0]+1, 6], data_chat.iat[list_list_kanswer[j][0]+1, 6])))
 
         # print(x_sim)
@@ -156,17 +156,17 @@ class Tfidf():
     def get_maxlen_sentence(self, list_list_kanswer, k):
         x_len = np.zeros((k, ))
         for i in range(k):
-            x_len[i] = len(self.data_chat.iat[list_list_kanswer[i][0] + 1, 6])
+            x_len[i] = len(self.data_chat.iat[list_list_kanswer[i][0] + 1, 0])
         n_result = np.argmax(x_len)
         return n_result
 
 
     def similarity(self, sentence, k = 10):
         list_list_kanswer = self.get_topk_answer(sentence, k)
-        # n_result = self.get_center_sentence(list_list_kanswer, k)
-        n_result = self.get_maxlen_sentence(list_list_kanswer, k)
+        n_result = self.get_center_sentence(list_list_kanswer, k)
+        # n_result = self.get_maxlen_sentence(list_list_kanswer, k)
 
-        return n_result, self.data_chat.iat[list_list_kanswer[n_result][0]+1, 6]
+        return n_result, self.data_chat.iat[list_list_kanswer[n_result][0]+1, 0]
 
     def predict(self, session_list, session_length, session_text, filepath_result):
         time_start = time.time()

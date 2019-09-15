@@ -18,7 +18,7 @@ class DataLoader():
     def __init__(self, file_path = "../data/JDDC_评测用数据集/dev_question.txt"):
         self.file_path = file_path
 
-    def read_file(self):
+    def read_file(self, use_context = True):
         with open(self.file_path, "r", encoding="utf8") as f:
             newsess = ""
             session_list = []
@@ -39,7 +39,10 @@ class DataLoader():
                     for q in ques:
                         session_text.append(tlist+""+q)
                     ques = []
-                    tlist = ""
+                    if use_context == False:
+                        tlist = ""
+                    else :
+                        tlist += text.replace("!@@@!", " ") + " "
                     line = f.readline()
                 if string == "<context>":
                     while True:
