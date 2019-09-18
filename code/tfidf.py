@@ -40,6 +40,7 @@ class Tfidf():
         for i in range(data_chat.shape[0]):
             sentence = data_chat.iat[i, 0]
             list_word = list(self.seg_jieba.cut(sentence, True))
+            # list_word = list(self.seg_jieba.cut(sentence, False))
             texts.append(list_word)
         self.dictionary = corpora.Dictionary(texts)
         self.dictionary.filter_extremes(no_below=3, no_above=0.5, keep_n=100000, keep_tokens=None)
@@ -76,7 +77,9 @@ class Tfidf():
 
     ## 先使用sentence2vec将需要匹配的句子传进去
     def sentence2vec(self, sentence):
-        list_word = list(self.seg_jieba.cut(sentence))
+        # list_word = list(self.seg_jieba.cut(sentence, True))
+        list_word = list(self.seg_jieba.cut(sentence, False))
+
         vec_bow = self.dictionary.doc2bow(list_word)
         return self.tfidf[vec_bow]
 
@@ -98,8 +101,10 @@ class Tfidf():
         :return: 返回句子的余弦相似度
         """
         # 分词
-        cut1 = self.seg_jieba.cut(s1)
-        cut2 = self.seg_jieba.cut(s2)
+        # cut1 = self.seg_jieba.cut(s1, True)
+        # cut2 = self.seg_jieba.cut(s2, True)
+        cut1 = self.seg_jieba.cut(s1, False)
+        cut2 = self.seg_jieba.cut(s2, False)
         list_word1 = (','.join(cut1)).split(',')
         list_word2 = (','.join(cut2)).split(',')
 
@@ -127,9 +132,11 @@ class Tfidf():
 
     def cos_dist(self, s1, s2):
         """
-        :param vec1: 向量1
-        :param vec2: 向量2
-        :return: 返回两个向量的余弦相似度
+        需要调用get_word_vector()得到向量化表示
+
+        :param vec1:
+        :param vec2:
+        :return: 返回两个句子的余弦相似度
         """
         vec1, vec2 = self.get_word_vector(s1, s2)
         dist1= float(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
@@ -161,21 +168,21 @@ class Tfidf():
         return n_result
 
 
-    def similarity(self, sentence, k = 10):
+    def similarity(self, sentence, k):
         list_list_kanswer = self.get_topk_answer(sentence, k)
         n_result = self.get_center_sentence(list_list_kanswer, k)
         # n_result = self.get_maxlen_sentence(list_list_kanswer, k)
 
         return n_result, self.data_chat.iat[list_list_kanswer[n_result][0]+1, 0]
 
-    def predict(self, session_list, session_length, session_text, filepath_result):
+    def predict(self, session_list, session_length, session_text, filepath_result, k = 15):
         time_start = time.time()
         with open(filepath_result, "w", encoding='utf-8') as f_out:
             cnt = 0
             for i in range(len(session_list)):
                 f_out.write("<session " + session_list[i] + ">\n")
                 for j in range(session_length[i]):
-                    f_out.write(self.similarity(session_text[cnt])[1] + "\n")
+                    f_out.write(self.similarity(session_text[cnt], k)[1] + "\n")
                     cnt += 1
                 f_out.write("</session " + session_list[i] + ">\n\n")
 
@@ -183,9 +190,9 @@ class Tfidf():
         print('time cost', time_end - time_start, 's')
 
 
-# filepath_input = "../data/JDDC_100W训练数据集/训练数据集/chat_1per.txt"
+# filepath_origin = "../data/JDDC_100W训练数据集/训练数据集/chat_1per.txt"
 # filepath_result = "../output/ans.txt"
-# model_tfidf = Tfidf(filepath_input, filepath_result)
+# model_tfidf = Tfidf(filepath_origin, filepath_result)
 # model_tfidf.fit()
 #
 # data_loader = DataLoader()

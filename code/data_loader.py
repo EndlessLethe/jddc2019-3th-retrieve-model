@@ -15,10 +15,11 @@ class DataLoader():
     输出的数据是list_session_id, list_list_question
     """
 
-    def __init__(self, file_path = "../data/JDDC_评测用数据集/dev_question.txt"):
+    def __init__(self, file_path = "../data/JDDC_评测用数据集/dev_question.txt", use_context = True):
         self.file_path = file_path
+        self.use_context = use_context
 
-    def read_file(self, use_context = True):
+    def read_file(self):
         with open(self.file_path, "r", encoding="utf8") as f:
             newsess = ""
             session_list = []
@@ -39,7 +40,7 @@ class DataLoader():
                     for q in ques:
                         session_text.append(tlist+""+q)
                     ques = []
-                    if use_context == False:
+                    if self.use_context == False:
                         tlist = ""
                     else :
                         tlist += text.replace("!@@@!", " ") + " "
