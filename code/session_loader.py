@@ -7,7 +7,7 @@ import re
 # import sklearn
 
 
-class DataLoader():
+class SessionLoader():
     """
     这个类使用来处理测试集数据的。（训练集和开发集数据都是处理好的.csv文件，可以直接读取）
     测试集数据是以session形式给出的多个QQAQA对
@@ -60,7 +60,7 @@ class DataLoader():
                 line = f.readline()
         return session_list, session_length, session_text
 
-# data_loader = DataLoader()
+# data_loader = SessionLoader()
 # session_list, session_length, session_text = data_loader.read_file()
 # print(len(session_list))
 # print(session_list)

@@ -9,7 +9,7 @@ from jieba_seg import JiebaSeg
 import time
 # import logging
 from gensim import corpora, models, similarities
-from data_loader import DataLoader
+from session_loader import SessionLoader
 
 class Tfidf():
     def __init__(self, filepath_input = "../data/JDDC_100W训练数据集/训练数据集/chat_1per.txt"):
@@ -195,7 +195,7 @@ class Tfidf():
 # model_tfidf = Tfidf(filepath_origin, filepath_result)
 # model_tfidf.fit()
 #
-# data_loader = DataLoader()
+# data_loader = SessionLoader()
 # session_list, session_length, session_text = data_loader.read_file()
 # model_tfidf.predict(session_list, session_length, session_text)
 # print("Finish")

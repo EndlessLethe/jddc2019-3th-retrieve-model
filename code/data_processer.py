@@ -14,31 +14,41 @@ class DataProcesser():
         is_bad_line()
         replace_special_field()
     """
-    def __init__(self, n_col = 0, col_index = 0, filepath_origin ="../data/chat.txt", filepath_output_primary ="../data/chat_100per.txt",
-                 filepath_fundamental ="../data/chat_refined.txt"):
+    def __init__(self, n_col = 0, col_index = 0, filepath_origin ="../data/chat.txt", filepath_output_primary ="../data/chat_primary.txt",
+                 filepath_fundamental ="../data/chat_fundamental.txt"):
+        """
+        Args:
+            n_col : total number of columns.
+            col_index : the index of the col that contains unexpected tabs.
+                index is start from 1.
+
+        Note: col_index is start from 1 !!
+        """
         self.filepath_origin = filepath_origin
         self.filepath_output_primary = filepath_output_primary
         self.filepath_output_fundamental = filepath_fundamental
         self.n_col = n_col
-        self.col_index = col_index
+        self.col_index = col_index-1
         self.data = None
 
     def get_file_primary_processed(self, list_filter_col = []):
-        
+        if os.path.exists(self.filepath_output_primary):
+            print("The primary processed file exists")
+            return
         self.get_file_standar_csv_format()
-        self.data = self.load_data()
+        self.load_data()
         self.drop_bad_line(list_filter_col)
 
         for i in range(self.data.shape[0]):
             self.data.iat[i, self.col_index] = self.replace_special_field(self.data.iat[i, self.col_index])
 
-        self.data.to_csv(self.filepath_output_primary, encoding="utf-8")
-        print("output file after primary processed.")
+        self.data.to_csv(self.filepath_output_primary, encoding="utf-8", index = False, sep = "\t", header = None)
+        print("output file is primary processed.")
 
     def load_data(self):
         data = pd.read_csv(self.filepath_output_fundamental, sep="\t", engine="python",
                            warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header = None)
-        return data
+        self.data = data
 
     def get_file_standar_csv_format(self):
         """
@@ -64,16 +74,18 @@ class DataProcesser():
                 return
             for line in file_in:
                 list_col = line.strip("\n").split("\t")
-                str_tmp1 = "\t".join(list_col[0:self.col_index-1])
+                str_tmp1 = "\t".join(list_col[0:self.col_index])
 
-                if self.n_col != self.col_index:
-                    str_given_col = " ".join(list_col[self.col_index - 1:-(self.n_col - self.col_index)]).strip()
-                    str_given_col = re.sub("['\"', '\0', '&nbsp']", " ", str_given_col)
-                    str_tmp2 = "\t".join(list_col[-(self.n_col-self.col_index):])
+                if self.n_col != self.col_index+1:
+                    str_given_col = " ".join(list_col[self.col_index:-(self.n_col - self.col_index -1)]).strip()
+                    str_given_col = re.sub("['\"', '\0']", " ", str_given_col)
+                    str_given_col = re.sub("&nbsp", " ", str_given_col)
+                    str_tmp2 = "\t".join(list_col[-(self.n_col-self.col_index -1):])
                     str_res = "\t".join([str_tmp1, str_given_col, str_tmp2])
                 else :
-                    str_given_col = " ".join(list_col[self.col_index - 1:]).strip()
-                    str_given_col = re.sub("['\"', '\0', '&nbsp']", " ", str_given_col)
+                    str_given_col = " ".join(list_col[self.col_index:]).strip()
+                    str_given_col = re.sub("['\"', '\0']", " ", str_given_col)
+                    str_given_col = re.sub("&nbsp", " ", str_given_col)
                     str_res = "\t".join([str_tmp1, str_given_col])
                 file_out.write(str_res + "\n")
             file_out.flush()
@@ -134,5 +146,9 @@ class DataProcesser():
         sentence = re.sub("α", " ", sentence)
         return sentence
 
+    # def
+
+
 dp = DataProcesser(7, 7)
 dp.get_file_primary_processed([0, 1, 2, 3, 4])
+# print(dp.replace_special_field("小妹正在火速为您查询，还请您稍等一下呢，谢谢#E-s[数字x]"))

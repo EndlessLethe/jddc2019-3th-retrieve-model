@@ -32,17 +32,21 @@ class ResultEvaluator():
 
     def get_bleu(self, list_predict, list_answer):
         n_sum = 0
-        # seg_jieba = JiebaSeg()
+        seg_jieba = JiebaSeg()
 
         smooth = SmoothingFunction()
         for i in range(len(list_predict)):
-            n_eval = sentence_bleu(list_answer[i], list_predict[i], smoothing_function=smooth.method1)
-            # n_eval = sentence_bleu(seg_jieba.cut(list_answer[i]), seg_jieba.cut(list_predict[i]))
+            ## 下面注释掉的写法有错误
+            # n_eval = sentence_bleu(list_answer[i], list_predict[i], smoothing_function=smooth.method1)
+            n_eval = sentence_bleu([seg_jieba.cut(list_answer[i])], seg_jieba.cut(list_predict[i]), smoothing_function=smooth.method1)
             n_sum +=  n_eval
             # print(n_eval, list_answer[i], list_predict[i])
         return n_sum / len(list_predict)
 
-# import jieba
+# re = ResultEvaluator()
+# print(re.get_bleu(["好的，祝您工作愉快，再见!"], ["好的，祝您工作愉快，再见!"]))
+
+
 # reference=['The', 'new', 'translator', 'will', 'stand', 'on', 'the', 'exhibition', 'on', 'behalf', 'of', 'the', 'four', 'times', 'group', 'at', 'the', 'exhibition', 'We', 'will', 'introduce', 'the', 'new', 'star`s', 'business', 'the', 'advantages', 'and', 'the', 'successful', 'cases', 'so', 'that', 'you', 'can', 'understand', 'the', 'new', 'translator', 'more', 'comprehensively', 'We', 'have', 'a', 'stable', 'full-time', 'international', 'team', 'that', 'ensures', 'punctual', 'efficient', 'translation', 'and', 'dubbing', 'and', 'provides', 'a', 'full', 'range', 'of', 'control', 'through', 'the', 'perfect', 'quality', 'control', 'and', 'project', 'management', 'system', 'providing', 'a', 'one-stop', 'service', 'for', 'translation', 'dubbing', 'subtitle', 'production', 'post', 'production', 'broadcasting', 'and', 'ratings', 'surveys'],['The', 'new', 'translator', 'star', 'will', 'represent', 'sida', 'times', 'group', 'in', 'the', 'exhibition', 'when', 'we', 'will', 'introduce', 'the', 'new', 'translator', 'star`s', 'business', 'advantages', 'successful', 'cases', 'and', 'other', 'dimensions', 'so', 'that', 'you', 'can', 'have', 'a', 'more', 'comprehensive', 'understanding', 'of', 'the', 'new', 'translator', 'star', 'We', 'have', 'a', 'stable', 'full-time', 'international', 'team', 'which', 'can', 'ensure', 'timely', 'and', 'efficient', 'translation', 'and', 'dubbing', 'Through', 'perfect', 'quality', 'control', 'and', 'project', 'management', 'system', 'we', 'provide', 'translation', 'dubbing', 'subtitle', 'production', 'post-production', 'broadcasting', 'and', 'rating', 'survey']
 # candidate_baidu=['New', 'Transtar', 'will', 'stand', 'on', 'the', 'exhibition', 'on', 'behalf', 'of', 'the', 'four', 'times', 'group', 'at', 'the', 'exhibition', 'We', 'will', 'introduce', 'the', 'new', 'star`s', 'business', 'the', 'advantages', 'and', 'the', 'successful', 'cases', 'so', 'that', 'you', 'can', 'understand', 'the', 'new', 'translator', 'more', 'comprehensively', 'We', 'have', 'a', 'stable', 'full-time', 'international', 'team', 'that', 'ensures', 'punctual', 'efficient', 'translation', 'and', 'dubbing', 'and', 'provides', 'a', 'full', 'range', 'of', 'control', 'through', 'the', 'perfect', 'quality', 'control', 'and', 'project', 'management', 'system', 'providing', 'a', 'one-stop', 'service', 'for', 'translation', 'dubbing', 'subtitle', 'production', 'streamlined', 'and', 'developed', 'quality', 'control', 'and', 'project', 'management', 'system']
 # n_eval = sentence_bleu(reference, candidate_baidu)
@@ -60,3 +64,6 @@ class ResultEvaluator():
 # print(n_eval)
 # n_eval = sentence_bleu(str_test2, str_test4)
 # print(n_eval)
+# n_eval = sentence_bleu([list(jieba.cut(str_test4))], list(jieba.cut(str_test4)), smoothing_function=smooth.method1)
+# print(n_eval)
+
