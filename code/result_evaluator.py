@@ -1,5 +1,6 @@
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from jieba_seg import JiebaSeg
+import re
 
 class ResultEvaluator():
     """
@@ -32,13 +33,18 @@ class ResultEvaluator():
 
     def get_bleu(self, list_predict, list_answer):
         n_sum = 0
-        seg_jieba = JiebaSeg()
+        # seg_jieba = JiebaSeg()
 
         smooth = SmoothingFunction()
         for i in range(len(list_predict)):
-            ## 下面注释掉的写法有错误
-            # n_eval = sentence_bleu(list_answer[i], list_predict[i], smoothing_function=smooth.method1)
-            n_eval = sentence_bleu([seg_jieba.cut(list_answer[i])], seg_jieba.cut(list_predict[i]), smoothing_function=smooth.method1)
+            ## 去掉标点符号
+            ## 实验表明sentence_bleu会自己去掉符号
+            # sentence_predict = re.sub(r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+", " ", list_predict[i])
+            # sentence_answer = re.sub(r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+", " ", list_answer[i])
+
+            ## bleu就计算字的ngram即可
+            n_eval = sentence_bleu([list_answer[i]], list_predict[i], smoothing_function=smooth.method1)
+            # n_eval = sentence_bleu([seg_jieba.cut(sentence_answer)], seg_jieba.cut(sentence_predict), smoothing_function=smooth.method1)
             n_sum +=  n_eval
             # print(n_eval, list_answer[i], list_predict[i])
         return n_sum / len(list_predict)

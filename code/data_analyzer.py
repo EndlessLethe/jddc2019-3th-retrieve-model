@@ -4,21 +4,11 @@ import matplotlib.pyplot as plt
 
 class DataAnalyzer():
     def __init__(self, filepath_input = "../data/chat_fundamental.txt"):
-        self.filepath_input = filepath_input
-        self.data = None
-        self.n_row = None
         self.x_session_length = None
         self.x_session_ptr = None
         self.cnt_session = None
-        self.load_data()
 
-    def load_data(self):
-        data = pd.read_csv(self.filepath_input, sep="\t", engine="python",
-                           warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header=None)
-        self.data = data
-        self.n_row = data.shape[0]
-
-    def get_session_info(self):
+    def get_session_info(self, data):
         """
         访问data_chat的数据的步骤：
         1. 先利用session_index获取到index: index = x_session_ptr[session_index]
@@ -38,15 +28,15 @@ class DataAnalyzer():
         # max_session_id = -1
         # max_session_index = -1
 
-        for i in range(self.n_row):
-            if not self.data.iat[i, 0] in set_session:
+        for i in range(data.shape[0]):
+            if not data.iat[i, 0] in set_session:
                 if i != 0:
                     x_session_length[cnt_session] = cnt_session_length
                     cnt_session += 1
                 x_session_ptr[cnt_session] = i
                 cnt_session_length = 1
-                set_session.add(self.data.iat[i, 0])
-                set_user.add(self.data.iat[i, 1])
+                set_session.add(data.iat[i, 0])
+                set_user.add(data.iat[i, 1])
             else:
                 cnt_session_length += 1
                 # if cnt_session_length > max_session_length:
@@ -55,12 +45,13 @@ class DataAnalyzer():
                     # max_session_id = self.data.iat[i, 0]
                     # max_session_index = cnt_session
         x_session_length[cnt_session] = cnt_session_length
-        x_session_ptr[cnt_session + 1] = self.n_row
+        x_session_ptr[cnt_session + 1] = data.shape[0]
 
         self.x_session_length = x_session_length[0:cnt_session + 1]
         self.x_session_ptr = x_session_ptr[0:cnt_session + 2]
         self.cnt_session = cnt_session
 
+        return cnt_session, x_session_ptr, x_session_length
         # print(len(set_session), len(set_user))
         # print(max_session_index, max_user_id, max_session_id, max_session_length)
 
@@ -113,11 +104,11 @@ class DataAnalyzer():
         print(Q3 + outlier_step, Q1 - outlier_step)
         print(len(list_outlier))
 
-    def print_session_top_len(self):
+    def print_session_top_len(self, data):
         ## 找到length对应的session index
         x_session_length_argsort = np.argsort(self.x_session_length)
         print(self.x_session_length[x_session_length_argsort[-1]])  ## 应该为314
-        print(self.x_session_length_argsort[-1])  ## 应该为461218
+        print(x_session_length_argsort[-1])  ## 应该为461218
         print(self.x_session_ptr[x_session_length_argsort[-1]])  ## 应该为9242002
 
         ## 输出前10个异常对话，观察特点
@@ -128,8 +119,8 @@ class DataAnalyzer():
             print("i == " + str(i), ptr_end - ptr_now)
             print()
             while (ptr_now < ptr_end):
-                print(int(self.data.iat[ptr_now, 2]), self.data.iat[ptr_now, 6])
+                print(int(data.iat[ptr_now, 2]), data.iat[ptr_now, 6])
                 ptr_now += 1
 
 da = DataAnalyzer()
-print(da.data.iat[da.x_session_ptr[da.cnt_session], 0])
+# print(da.data.iat[da.x_session_ptr[da.cnt_session], 0])

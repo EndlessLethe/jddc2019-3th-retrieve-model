@@ -39,8 +39,8 @@ class Tfidf():
 
         for i in range(data_chat.shape[0]):
             sentence = data_chat.iat[i, 0]
-            list_word = list(self.seg_jieba.cut(sentence, True))
-            # list_word = list(self.seg_jieba.cut(sentence, False))
+            # list_word = list(self.seg_jieba.cut(sentence, True))
+            list_word = list(self.seg_jieba.cut(sentence, False))
             texts.append(list_word)
         self.dictionary = corpora.Dictionary(texts)
         self.dictionary.filter_extremes(no_below=3, no_above=0.5, keep_n=100000, keep_tokens=None)

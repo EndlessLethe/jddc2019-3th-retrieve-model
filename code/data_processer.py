@@ -2,10 +2,14 @@ import pandas as pd
 import os
 import re
 import numpy as np
+from data_analyzer import DataAnalyzer
 
 class DataProcesser():
     """
-    Just run function get_file_primary_processed() to get processed file.
+    Just run this file to get processed file.
+    Please put the origin file at filepath "../data/chat.txt"
+
+    Note: Don't import this file!!!
 
     Functions:
         get_file_primary_processed()
@@ -14,8 +18,8 @@ class DataProcesser():
         is_bad_line()
         replace_special_field()
     """
-    def __init__(self, n_col = 0, col_index = 0, filepath_origin ="../data/chat.txt", filepath_output_primary ="../data/chat_primary.txt",
-                 filepath_fundamental ="../data/chat_fundamental.txt"):
+    def __init__(self, n_col = 0, col_index = 0, filepath_origin ="../data/chat.txt", filepath_fundamental ="../data/chat_fundamental.txt",
+                 filepath_output_primary ="../data/chat_primary.txt", filepath_output_reformated = None):
         """
         Args:
             n_col : total number of columns.
@@ -27,6 +31,7 @@ class DataProcesser():
         self.filepath_origin = filepath_origin
         self.filepath_output_primary = filepath_output_primary
         self.filepath_output_fundamental = filepath_fundamental
+        self.filepath_output_reformated = filepath_output_reformated
         self.n_col = n_col
         self.col_index = col_index-1
         self.data = None
@@ -35,20 +40,26 @@ class DataProcesser():
         if os.path.exists(self.filepath_output_primary):
             print("The primary processed file exists")
             return
+        print("start primary processing")
         self.get_file_standar_csv_format()
-        self.load_data()
+        self.load_data(self.filepath_output_fundamental)
         self.drop_bad_line(list_filter_col)
 
         for i in range(self.data.shape[0]):
             self.data.iat[i, self.col_index] = self.replace_special_field(self.data.iat[i, self.col_index])
 
-        self.data.to_csv(self.filepath_output_primary, encoding="utf-8", index = False, sep = "\t", header = None)
+        self.output_data(self.filepath_output_primary)
         print("output file is primary processed.")
 
-    def load_data(self):
-        data = pd.read_csv(self.filepath_output_fundamental, sep="\t", engine="python",
+    def load_data(self, filepath):
+        print("Loading file.")
+        data = pd.read_csv(filepath, sep="\t", engine="python",
                            warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header = None)
         self.data = data
+        print("Loading finished.")
+
+    def output_data(self, filepath):
+        self.data.to_csv(filepath, encoding="utf-8", index=False, sep="\t", header=None)
 
     def get_file_standar_csv_format(self):
         """
@@ -68,6 +79,8 @@ class DataProcesser():
         if os.path.exists(self.filepath_output_fundamental):
             print("The file after removing unexpected tabs exists.")
             return
+        print("start fundamental processing")
+
         with open(self.filepath_origin, "r", encoding='UTF-8') as file_in, open(
                 self.filepath_output_fundamental, "w", encoding='UTF-8') as file_out:
             if self.n_col == 0:
@@ -146,9 +159,86 @@ class DataProcesser():
         sentence = re.sub("α", " ", sentence)
         return sentence
 
-    # def
+    def get_file_reformated(self, k_per):
+        """
+        This function is used to:
+        1. unite QQQA into QA format
+        2. drop first A if a session starts from A.
+        3. drop lines with empty text
+        """
+        import random
 
+        print("start reformating.")
+
+        if self.data == None:
+            self.load_data(self.filepath_output_primary)
+
+        data_tmp = pd.Series(self.data[[6]].replace(to_replace=r'^\s*$', value=np.nan, regex=True).values.flatten())
+        self.data = self.data[np.array(data_tmp.notnull()).astype(bool)]
+
+        da = DataAnalyzer()
+        cnt_session, x_session_ptr, x_session_length = da.get_session_info(self.data)
+
+
+        filepath_output = None
+        if self.filepath_output_reformated != None:
+            filepath_output = self.filepath_output_reformated
+        else :
+            filepath_output = "../data/chat_reformated_" + str(k_per) + "per.txt"
+
+        with open(filepath_output, "w", encoding='UTF-8') as f_out:
+            for i in range(cnt_session + 1):
+                if random.uniform(0, 1) <= (k_per/100):
+                    sentence = ""
+                    is_first = True
+                    for j in range(x_session_ptr[i], x_session_ptr[i + 1]):
+                        ## 保证是QAQA的形式，而不是AQAQAQ
+
+                        if is_first and (self.data.iat[j, 2] == "1"):
+                            continue
+                        is_first = False
+                        ## 如果QQQAQA的第一个Q那么先输出这一行的0-5列，再存储句子
+                        ## 如果是中继的QQ，则加上
+                        ## 如果是末尾的，则输出sentence，并重置
+
+                        ## 如果是QA的Q，则直接输出行
+
+                        ## 对于下一个不存在的情况，根据sentence是否存在看是输出sentence或是整行
+
+                        if sentence == "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] == self.data.iat[
+                            j + 1, 2]:
+                            f_out.write(str(self.data.iat[j, 0]) + "\t" + str(self.data.iat[j, 1]) + "\t" +
+                                        str(self.data.iat[j, 2]) + "\t" + str(self.data.iat[j, 3]) + "\t" +
+                                        str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5]) + "\t")
+                            sentence += self.data.iat[j, 6]
+                        elif sentence != "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] == self.data.iat[
+                            j + 1, 2]:
+                            sentence += " " + self.data.iat[j, 6]
+                        elif sentence != "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] != self.data.iat[
+                            j + 1, 2]:
+                            f_out.write(sentence + "\n")
+                            sentence = ""
+                        elif sentence == "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] != self.data.iat[
+                            j + 1, 2]:
+                            f_out.write(str(self.data.iat[j, 0]) + "\t" + str(self.data.iat[j, 1]) + "\t" + str(self.data.iat[j, 2])
+                                        + "\t" + str(self.data.iat[j, 3]) + "\t" + str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5])
+                                        + "\t" + self.data.iat[j, 6] + "\n")
+                        elif sentence == "" and j + 1 == x_session_ptr[i + 1]:
+                            f_out.write(str(self.data.iat[j, 0]) + "\t" + str(self.data.iat[j, 1]) + "\t" +
+                                        str(self.data.iat[j, 2]) + "\t" + str(self.data.iat[j, 3]) + "\t" +
+                                        str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5]) + "\t" +
+                                        self.data.iat[j, 6] + "\n")
+                        elif sentence != "" and j + 1 == x_session_ptr[i + 1]:
+                            f_out.write(sentence + "\n")
+                            sentence = ""
+                else:
+                    continue
+
+        print("output file after reformating.")
 
 dp = DataProcesser(7, 7)
 dp.get_file_primary_processed([0, 1, 2, 3, 4])
-# print(dp.replace_special_field("小妹正在火速为您查询，还请您稍等一下呢，谢谢#E-s[数字x]"))
+
+## adjust this function arg "k_per" to select k percentage data
+dp.get_file_reformated(100)
+
