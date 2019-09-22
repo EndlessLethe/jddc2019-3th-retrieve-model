@@ -9,7 +9,9 @@ class DataProcesser():
     Just run this file to get processed file.
     Please put the origin file at filepath "../data/chat.txt"
 
-    Note: Don't import this file!!!
+    Note:
+    1. Don't import this file at any other file!!!
+    2. Loading and processing may take a long time up to 20 mins.
 
     Functions:
         get_file_primary_processed()
@@ -205,21 +207,17 @@ class DataProcesser():
 
                         ## 对于下一个不存在的情况，根据sentence是否存在看是输出sentence或是整行
 
-                        if sentence == "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] == self.data.iat[
-                            j + 1, 2]:
+                        if sentence == "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] == self.data.iat[j + 1, 2]:
+                            sentence += self.data.iat[j, 6]
+                        elif sentence != "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] == self.data.iat[j + 1, 2]:
+                            sentence += " " + self.data.iat[j, 6]
+                        elif sentence != "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] != self.data.iat[j + 1, 2]:
+                            sentence += " " + self.data.iat[j, 6]
                             f_out.write(str(self.data.iat[j, 0]) + "\t" + str(self.data.iat[j, 1]) + "\t" +
                                         str(self.data.iat[j, 2]) + "\t" + str(self.data.iat[j, 3]) + "\t" +
-                                        str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5]) + "\t")
-                            sentence += self.data.iat[j, 6]
-                        elif sentence != "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] == self.data.iat[
-                            j + 1, 2]:
-                            sentence += " " + self.data.iat[j, 6]
-                        elif sentence != "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] != self.data.iat[
-                            j + 1, 2]:
-                            f_out.write(sentence + "\n")
+                                        str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5]) + "\t" + sentence + "\n")
                             sentence = ""
-                        elif sentence == "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] != self.data.iat[
-                            j + 1, 2]:
+                        elif sentence == "" and j + 1 < x_session_ptr[i + 1] and self.data.iat[j, 2] != self.data.iat[j + 1, 2]:
                             f_out.write(str(self.data.iat[j, 0]) + "\t" + str(self.data.iat[j, 1]) + "\t" + str(self.data.iat[j, 2])
                                         + "\t" + str(self.data.iat[j, 3]) + "\t" + str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5])
                                         + "\t" + self.data.iat[j, 6] + "\n")
@@ -229,7 +227,10 @@ class DataProcesser():
                                         str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5]) + "\t" +
                                         self.data.iat[j, 6] + "\n")
                         elif sentence != "" and j + 1 == x_session_ptr[i + 1]:
-                            f_out.write(sentence + "\n")
+                            sentence += " " + self.data.iat[j, 6]
+                            f_out.write(str(self.data.iat[j, 0]) + "\t" + str(self.data.iat[j, 1]) + "\t" +
+                                        str(self.data.iat[j, 2]) + "\t" + str(self.data.iat[j, 3]) + "\t" +
+                                        str(self.data.iat[j, 4]) + "\t" + str(self.data.iat[j, 5]) + "\t" + sentence + "\n")
                             sentence = ""
                 else:
                     continue

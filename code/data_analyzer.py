@@ -3,10 +3,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class DataAnalyzer():
-    def __init__(self, filepath_input = "../data/chat_fundamental.txt"):
+
+    def __init__(self, filepath_input = None):
+        """
+        This class provide 2 ways to use:
+        1. import as moudle
+        2. just run this .py to see what exists in data directly.
+            (At last of this file, here's some example codes)
+
+        self.data is usually None to decrease the usage of space.
+        It is used only when user just want to run DataAnalyzer only and call its function conveniently.
+        """
+        self.data = None
+        self.filepath_input = filepath_input
         self.x_session_length = None
         self.x_session_ptr = None
         self.cnt_session = None
+
+    def load_data(self):
+        data_chat = pd.read_csv(self.filepath_input, sep="\t", engine="python",
+                                warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header=None)
+        # return data_chat[[0]]
+        self.data = data_chat
 
     def get_session_info(self, data):
         """
@@ -122,5 +140,7 @@ class DataAnalyzer():
                 print(int(data.iat[ptr_now, 2]), data.iat[ptr_now, 6])
                 ptr_now += 1
 
-da = DataAnalyzer()
-# print(da.data.iat[da.x_session_ptr[da.cnt_session], 0])
+# da = DataAnalyzer("../data/chat_1per.txt")
+# da.load_data()
+# da.get_session_info(da.data)
+# print(da.data.iat[da.x_session_ptr[da.cnt_session], 0]) ## 应该是 fffd0cf8-b5df-4d7e-baaf-91776fac2024
