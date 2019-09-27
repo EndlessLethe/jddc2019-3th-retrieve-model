@@ -167,26 +167,29 @@ class DataProcesser():
         1. unite QQQA into QA format
         2. drop first A if a session starts from A.
         3. drop lines with empty text
+        4. drop lines whose length is more than 100
         """
         import random
-
         print("start reformating.")
-
         if self.data == None:
             self.load_data(self.filepath_output_primary)
 
+        ## drop lines with empty text
         data_tmp = pd.Series(self.data[[6]].replace(to_replace=r'^\s*$', value=np.nan, regex=True).values.flatten())
         self.data = self.data[np.array(data_tmp.notnull()).astype(bool)]
 
+        ## drop lines whose length is more than 100
+        list_sentence_length = [len(x) for x in self.data[[6]].values.flatten()]
+        self.data = self.data[np.array(list_sentence_length) < 100]
+
         da = DataAnalyzer()
         cnt_session, x_session_ptr, x_session_length = da.get_session_info(self.data)
-
 
         filepath_output = None
         if self.filepath_output_reformated != None:
             filepath_output = self.filepath_output_reformated
         else :
-            filepath_output = "../data/chat_reformated_" + str(k_per) + "per.txt"
+            filepath_output = "../data/chat_" + str(k_per) + "per.txt"
 
         with open(filepath_output, "w", encoding='UTF-8') as f_out:
             for i in range(cnt_session + 1):
@@ -241,5 +244,5 @@ dp = DataProcesser(7, 7)
 dp.get_file_primary_processed([0, 1, 2, 3, 4])
 
 ## adjust this function arg "k_per" to select k percentage data
-dp.get_file_reformated(100)
+dp.get_file_reformated(1)
 

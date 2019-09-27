@@ -19,6 +19,11 @@ import logging
 import data_utils
 import seq2seq_model
 
+logging.basicConfig(level=logging.ERROR)
+setattr(tf.contrib.rnn.GRUCell, '__deepcopy__', lambda self, _: self)
+setattr(tf.contrib.rnn.BasicLSTMCell, '__deepcopy__', lambda self, _: self)
+setattr(tf.contrib.rnn.MultiRNNCell, '__deepcopy__', lambda self, _: self)
+
 try:
     from ConfigParser import ConfigParser
 except:
@@ -26,6 +31,7 @@ except:
 
 gConfig = {}
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 def get_config(config_file='seq2seq.ini'):
     parser = ConfigParser()
     parser.read(config_file)
@@ -56,7 +62,7 @@ def read_data(source_path, target_path, max_size=None):
       (source, target) pairs read from the provided data files that fit
       into the n-th bucket, i.e., such that len(source) < _buckets[n][0] and
       len(target) < _buckets[n][1]; source and target are lists of token-ids.
-      
+
   Notes:
       读取文件是source和target文件一起读的，每一次读操作都是读一个sentence pair（一句来自
       source，一句来自target），读取之后根据长度将该pair装入到相应的桶里。
@@ -83,7 +89,6 @@ def read_data(source_path, target_path, max_size=None):
 
 
 def create_model(session, forward_only):
-
   """Create model and initialize or load parameters"""
   model = seq2seq_model.Seq2SeqModel( gConfig['enc_vocab_size'], gConfig['dec_vocab_size'], _buckets, gConfig['layer_size'], gConfig['num_layers'], gConfig['max_gradient_norm'], gConfig['batch_size'], gConfig['learning_rate'], gConfig['learning_rate_decay_factor'], forward_only=forward_only)
 
@@ -186,17 +191,17 @@ def decode():
     # Create model structrue and load parameters
     model = create_model(sess, True)
     model.batch_size = 1  # We decode one sentence at a time.
-    
+
     # Load vocabularies.
     enc_vocab_path = os.path.join(gConfig['working_directory'],"vocab%d.enc" % gConfig['enc_vocab_size'])
     dec_vocab_path = os.path.join(gConfig['working_directory'],"vocab%d.dec" % gConfig['dec_vocab_size'])
-    
+
     enc_vocab, _ = data_utils.initialize_vocabulary(enc_vocab_path)
     _, rev_dec_vocab = data_utils.initialize_vocabulary(dec_vocab_path)
-    
+
     # Decode from standard input.
     test_path = gConfig['test']
-    result_path = gConfig['list_list_kanswer']
+    result_path = gConfig['result']
     with codecs.open(result_path,mode='w',encoding='utf-8') as wf:
         wf.truncate()
         wf.close()
@@ -214,7 +219,7 @@ def decode():
                   # Get a 1-element batch to feed the sentence to the model.
                   encoder_inputs, decoder_inputs, target_weights = model.get_batch(
                       {bucket_id: [(token_ids, [])]}, bucket_id)
-                  
+
                   """
                   logits可以理解成未进入softmax的概率，一般是输出层的输出，softmax的输入
                   """

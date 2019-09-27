@@ -9,7 +9,6 @@ import os
 import re
 #import jieba
 import NeuHub_API_JDDC
-import jieba
 
 from tensorflow.python.platform import gfile
 
@@ -30,26 +29,67 @@ _WORD_SPLIT = re.compile("([.,!?\"':;)(])")
 _DIGIT_RE = re.compile("\d")
 
 
+def get_file(file_path):
+    with open(file_path, "r", encoding="utf8") as f:
+        newsess = ""
+        session_list = []
+        session_length = []
+        session_text = []
+        line = f.readline()
+        ques = []
+        tlist = ""
+        while line:
+            string = line.strip()
+            if string.startswith("<session"):
+                session_id = string[9:-1]
+                session_list.append(session_id)
+            if string.startswith("</session"):
+                if session_list[-1]!=string[10:-1]:
+                    raise ValueError(string, session_list[-1])
+                session_length.append(len(ques))
+                for q in ques:
+                    session_text.append(tlist+"。"+q)
+                ques = []
+                tlist = ""
+                line = f.readline()
+            if string == "<context>":
+                while True:
+                    line = f.readline().strip()
+                    if line.startswith("Q:") or line.startswith("A:"):
+                        line = line[2:]
+                        string = line.strip()
+                        text = string.split("<sep>")[0]
+                        tlist += text.replace("!@@@!", "。") + "。"
+                    else:
+                        break
+                continue
+            if re.match(r"^<Q[0-9]*>(.*)</Q[0-9]*>$", string):
+                ques.append(re.match(r"^<Q[0-9]*>(.*)</Q[0-9]*>$", string)[1].replace("!@@@!", "。"))
+            line = f.readline()
+    with open("temp.txt", "w", encoding="utf8") as f:
+        for st in session_text:
+            f.write(st+"\n")
+    return session_list, session_length
+
+
 
 def basic_tokenizer(sentence):
   """Very basic tokenizer: split the sentence into a list of tokens."""
   words = []
   #按词切词
-  #sentence = NeuHub_API_JDDC.parse(sentence)
-  sentence = jieba.cut(sentence)
-  # for i in range(len(sentence)):
-  for i in sentence:
-    if isinstance(i, str):
-        word = str.encode(i)
+  sentence = NeuHub_API_JDDC.parse(sentence)
+  for i in range(len(sentence)):
+    if isinstance(sentence[i], str):
+        word = str.encode(sentence[i])
     else:
-        word = i
+        word = sentence[i]
     words.extend(word.decode("utf-8"))
   return [w for w in words if w]
 
 
 def create_vocabulary(vocabulary_path, data_path, max_vocabulary_size,
                       tokenizer=None, normalize_digits=True):
-    
+
   if not gfile.Exists(vocabulary_path):
     print("Creating vocabulary %s from %s" % (vocabulary_path, data_path))
     vocab = {}

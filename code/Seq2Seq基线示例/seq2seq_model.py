@@ -77,9 +77,9 @@ class Seq2SeqModel(object):
       b = tf.get_variable("proj_b", [self.target_vocab_size])
       output_projection = (w, b)
 
-      def sampled_loss(labels, inputs):
+      def sampled_loss(labels, logits):
         labels = tf.reshape(labels, [-1, 1])
-        return tf.nn.sampled_softmax_loss(w_t, b, labels, inputs, num_samples,
+        return tf.nn.sampled_softmax_loss(w_t, b, labels, logits, num_samples,
                 self.target_vocab_size)
       softmax_loss_function = sampled_loss
 
@@ -91,7 +91,7 @@ class Seq2SeqModel(object):
     cell = tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=0.5)
     if num_layers > 1:
       cell = tf.contrib.rnn.MultiRNNCell([single_cell] * num_layers)
-    
+
     # The seq2seq function: we use embedding for the input and attention.
     def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
       return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(

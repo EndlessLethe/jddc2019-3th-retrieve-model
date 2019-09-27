@@ -26,6 +26,57 @@ class DataAnalyzer():
         # return data_chat[[0]]
         self.data = data_chat
 
+    def plot_distribution(self, x_data):
+        from collections import Counter
+        dict_data = Counter(np.sort(x_data))
+        # print(dict_data)
+
+        X = np.array(list(dict_data.keys())).reshape(-1, 1)  # numbers of one same feature value
+        Y = np.array(list(dict_data.values())).reshape(-1, 1)  # count
+
+        plt.plot(X, Y)
+        plt.show()
+
+        X = np.log10(np.array(list(dict_data.keys()))).reshape(-1, 1)  # numbers of one same feature value
+        Y = np.log10(list(dict_data.values())).reshape(-1, 1)  # count
+
+        plt.plot(X, Y)
+        plt.show()
+
+    def plot_extrame(self, x_data):
+
+        plt.boxplot(x_data)
+        plt.show()
+
+        ## Q1为数据占25%的数据值范围
+        Q1 = np.percentile(x_data, 25)
+
+        ## Q3为数据占75%的数据范围
+        Q3 = np.percentile(x_data, 75)
+        IQR = Q3 - Q1
+
+        ## 正常值的范围
+        outlier_step = 0 * IQR
+        list_standard = [x for x in x_data if x < Q3 + outlier_step or x > Q1 - outlier_step]
+
+        print("IQO = 0, 正常值的范围：", Q3 + outlier_step, Q1 - outlier_step)
+        print("正常点的数量", len(list_standard))
+
+        ## soft 异常值的范围
+        outlier_step = 1.5 * IQR
+        list_outlier = [x for x in x_data if x > Q3 + outlier_step or x < Q1 - outlier_step]
+
+        print("IQO = 1.5, 异常值临界点：", Q3 + outlier_step, Q1 - outlier_step)
+        print("异常点的数量", len(list_outlier))
+
+        ## hard 异常值的范围
+        ## 这个hard异常值是测试得到的，发现3 * IQR有1w+异常值，但5 * IQR，比较合适
+        outlier_step = 5 * IQR
+        list_outlier = [x for x in x_data if x > Q3 + outlier_step or x < Q1 - outlier_step]
+
+        print("IQO = 5, 异常值临界点：", Q3 + outlier_step, Q1 - outlier_step)
+        print("极端异常点的数量", len(list_outlier))
+
     def get_session_info(self, data):
         """
         访问data_chat的数据的步骤：
@@ -74,53 +125,10 @@ class DataAnalyzer():
         # print(max_session_index, max_user_id, max_session_id, max_session_length)
 
     def show_session_info(self):
-        from collections import Counter
-        dict_session_length = Counter(np.sort(self.x_session_length))
-        # print(dict_session_length)
+        self.plot_distribution(self.x_session_length)
+        self.plot_extrame(self.x_session_length)
 
-        X = np.array(list(dict_session_length.keys())).reshape(-1, 1)  # numbers of one same feature value
-        Y = np.array(list(dict_session_length.values())).reshape(-1, 1)  # count
 
-        plt.plot(X, Y)
-        plt.show()
-
-        X = np.log10(np.array(list(dict_session_length.keys()))).reshape(-1, 1)  # numbers of one same feature value
-        Y = np.log10(list(dict_session_length.values())).reshape(-1, 1)  # count
-
-        plt.plot(X, Y)
-        plt.show()
-
-        plt.boxplot(self.x_session_length)
-        plt.show()
-
-        ## Q1为数据占25%的数据值范围
-        Q1 = np.percentile(self.x_session_length, 25)
-
-        ## Q3为数据占75%的数据范围
-        Q3 = np.percentile(self.x_session_length, 75)
-        IQR = Q3 - Q1
-
-        ## 正常值的范围
-        outlier_step = 0.1 * IQR
-        list_standard = [x for x in self.x_session_length if x < Q3 + outlier_step or x > Q1 - outlier_step]
-
-        # print(Q3 + outlier_step, Q1 - outlier_step)
-        print(len(list_standard))
-
-        ## soft 异常值的范围
-        outlier_step = 1.5 * IQR
-        list_outlier = [x for x in self.x_session_length if x > Q3 + outlier_step or x < Q1 - outlier_step]
-
-        print(Q3 + outlier_step, Q1 - outlier_step)
-        print(len(list_outlier))
-
-        ## hard 异常值的范围
-        ## 这个hard异常值是测试得到的，发现3 * IQR有1w+异常值，但5 * IQR，比较合适
-        outlier_step = 5 * IQR
-        list_outlier = [x for x in self.x_session_length if x > Q3 + outlier_step or x < Q1 - outlier_step]
-
-        print(Q3 + outlier_step, Q1 - outlier_step)
-        print(len(list_outlier))
 
     def print_session_top_len(self, data):
         ## 找到length对应的session index
@@ -140,7 +148,13 @@ class DataAnalyzer():
                 print(int(data.iat[ptr_now, 2]), data.iat[ptr_now, 6])
                 ptr_now += 1
 
-# da = DataAnalyzer("../data/chat_1per.txt")
+# da = DataAnalyzer("../data/chat_reformated_1per.txt")
 # da.load_data()
-# da.get_session_info(da.data)
-# print(da.data.iat[da.x_session_ptr[da.cnt_session], 0]) ## 应该是 fffd0cf8-b5df-4d7e-baaf-91776fac2024
+# # da.get_session_info(da.data)
+# # # print(da.data.iat[da.x_session_ptr[da.cnt_session], 0]) ## 应该是 fffd0cf8-b5df-4d7e-baaf-91776fac2024
+# # print(da.x_session_length)
+# # da.show_session_info()
+#
+# list_sentence_length = [len(x) for x in da.data[[6]].values.flatten()]
+# da.plot_distribution(np.array(list_sentence_length))
+# da.plot_extrame(np.array(list_sentence_length))
