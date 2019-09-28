@@ -7,11 +7,13 @@ from session_loader import SessionLoader
 from run_model import RunModel
 from result_evaluator import ResultEvaluator
 
+
 def main(filepath_input, filepath_result):
-    filepath_train = "data/chat_reformated_10per.txt"
+    filepath_train = "data/chat_1per.txt"
     # filepath_train = "data/chat_1per with context.txt"
     rm = RunModel(filepath_train)
-    rm.fit(num_topics = 80)
+    # rm.fit(num_topics = 80)
+    rm.fit()
 
     data_loader = SessionLoader(filepath_input, use_context = False)
     session_list, session_length, session_text = data_loader.read_file()

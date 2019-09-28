@@ -1,3 +1,6 @@
-# provided model
+﻿# provided model
 JDDC_Seq2Seq*
 JDDC_TFIDF*
+/Seq2Seq基线示例
+/ELMo
+/DAM

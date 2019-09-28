@@ -148,13 +148,13 @@ class DataAnalyzer():
                 print(int(data.iat[ptr_now, 2]), data.iat[ptr_now, 6])
                 ptr_now += 1
 
-# da = DataAnalyzer("../data/chat_reformated_1per.txt")
+# da = DataAnalyzer("../data/chat_1per.txt")
 # da.load_data()
-# # da.get_session_info(da.data)
-# # # print(da.data.iat[da.x_session_ptr[da.cnt_session], 0]) ## 应该是 fffd0cf8-b5df-4d7e-baaf-91776fac2024
-# # print(da.x_session_length)
-# # da.show_session_info()
-#
+# # # da.get_session_info(da.data)
+# # # # print(da.data.iat[da.x_session_ptr[da.cnt_session], 0]) ## 应该是 fffd0cf8-b5df-4d7e-baaf-91776fac2024
+# # # print(da.x_session_length)
+# # # da.show_session_info()
+# #
 # list_sentence_length = [len(x) for x in da.data[[6]].values.flatten()]
 # da.plot_distribution(np.array(list_sentence_length))
 # da.plot_extrame(np.array(list_sentence_length))

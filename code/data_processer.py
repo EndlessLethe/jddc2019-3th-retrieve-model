@@ -244,5 +244,5 @@ dp = DataProcesser(7, 7)
 dp.get_file_primary_processed([0, 1, 2, 3, 4])
 
 ## adjust this function arg "k_per" to select k percentage data
-dp.get_file_reformated(1)
+dp.get_file_reformated(10)
 

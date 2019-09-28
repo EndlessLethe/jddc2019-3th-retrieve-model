@@ -58,8 +58,12 @@ class UnsupervisedReranker():
     def get_center_sentence(self, list_list_kanswer, data, k):
         x_sim = np.zeros((k, k))
         for i in range(k):
+            if list_list_kanswer[i][0] + 1 >= data.shape[0]:
+                continue
             if len(data.iat[list_list_kanswer[i][0] + 1, 0]) <= 7: continue
             for j in range(k):
+                if list_list_kanswer[j][0] + 1 >= data.shape[0]:
+                    continue
                 if i != j:
                     x_sim[i][j] = self.cos_dist(data.iat[list_list_kanswer[i][0] + 1, 0],
                                                 data.iat[list_list_kanswer[j][0] + 1, 0])

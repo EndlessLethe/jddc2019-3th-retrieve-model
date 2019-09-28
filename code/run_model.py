@@ -4,6 +4,7 @@ from embedding_model_loader import EmbeddingModelLoader
 from unsupervised_reranker import UnsupervisedReranker
 import pandas as pd
 from jieba_seg import JiebaSeg
+import numpy as np
 
 class RunModel():
     """
@@ -13,9 +14,11 @@ class RunModel():
     def __init__(self, filepath_input):
         self.filepath_input = filepath_input
         self.dictionary = None
+        self.tfidf_model = None
         self.index = None
         self.data = None
         self.model = None
+        self.model_index = None
         self.seg_jieba = JiebaSeg()
 
     def load_data(self):
@@ -24,19 +27,30 @@ class RunModel():
         # return data_chat[[0]]
         return data_chat[[6]]
 
-    def fit(self, num_topics = 40):
+    def fit(self, num_topics = None):
         self.data = self.load_data()
         model = EmbeddingModelLoader()
         ## could change the model used
-        # self.dictionary, self.model, self.corpus_embedding = model.tfidf_fit(self.data)
-        # self.dictionary, self.model, self.corpus_embedding = model.lsi_fit(self.data, num_topics)
-        self.dictionary, self.model, self.corpus_embedding = model.lda_fit(self.data, num_topics)
+        # self.dictionary, self.model, self.corpus_embedding, self.model_index = model.tfidf_fit(self.data)
+        # self.dictionary, self.model, self.corpus_embedding, self.model_index, self.tfidf_model = model.lsi_fit(self.data, num_topics)
+        self.dictionary, self.model, self.corpus_embedding, self.model_index = model.elmo_fit(self.data)
+        print(len(self.corpus_embedding), self.corpus_embedding[0])
 
-        self.index = self.get_index()
+        self.index = self.get_index(num_topics)
 
-    def get_index(self):
+    def get_index(self, num_topics = None):
         # self.index = similarities.MatrixSimilarity(corpus_tfidf, num_features=len(self.dictionary))
-        index = similarities.Similarity("out/", self.corpus_embedding, len(self.dictionary))
+
+        if self.model_index == 0:
+            ## bow
+            index = similarities.Similarity("out/", self.corpus_embedding, len(self.dictionary))
+        elif self.model_index == 1:
+            ## tfidf
+            index = similarities.Similarity("out/", self.corpus_embedding, len(self.dictionary))
+        elif self.model_index == 3 or self.model_index == 4:
+            index = similarities.Similarity("out/", self.corpus_embedding, num_topics)
+        elif self.model_index == 5:
+            index = similarities.Similarity("out/", self.corpus_embedding, 1024)
         return index
 
     ## 先使用sentence2vec将需要匹配的句子传进去
@@ -44,13 +58,22 @@ class RunModel():
         # list_word = list(self.seg_jieba.cut(sentence, True))
         list_word = list(self.seg_jieba.cut(sentence, False))
 
-        vec_bow = self.dictionary.doc2bow(list_word)
-        return self.model[vec_bow]
+        if self.model_index == 0:
+            ## bow
+            return self.dictionary.doc2bow(list_word)
+        elif self.model_index == 1:
+            ## tfidf
+            return self.model[self.dictionary.doc2bow(list_word)]
+        elif self.model_index == 3 or self.model_index == 4:
+            vec_tfidf = self.tfidf_model[self.dictionary.doc2bow(list_word)]
+            return self.model[vec_tfidf]
+        elif self.model_index == 5:
+            return EmbeddingModelLoader.elmo_sentence2corpus(self.model, [list_word])[0]
 
     def get_topk_answer(self, sentence, k=15):
         """求最相似的句子"""
-        sentence_vec = self.sentence2vec(sentence)
-        sims = self.index[sentence_vec]
+        vec_sentence = self.sentence2vec(sentence)
+        sims = self.index[vec_sentence]
 
         # 按相似度降序排序
         sim_sort = sorted(list(enumerate(sims)), key=lambda item: item[1], reverse=True)
