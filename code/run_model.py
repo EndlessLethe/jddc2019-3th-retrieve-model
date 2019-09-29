@@ -5,21 +5,27 @@ from unsupervised_reranker import UnsupervisedReranker
 import pandas as pd
 from jieba_seg import JiebaSeg
 import numpy as np
+import os
+import pickle
+
 
 class RunModel():
     """
     This Class is used to connect all components, such as embedding part for training,
     and search part, rerank part for predicting.
     """
-    def __init__(self, filepath_input):
+    def __init__(self, filepath_input, model_index):
+        """
+        Args:
+            filepath_input: the filepath of training data
+            model_index: use model_index to create the given embedding model.
+            0 - bow, 1 - tfidf, 2 - bm25, 3 - lsi, 4 - lda, 5 - elmo
+        """
         self.filepath_input = filepath_input
-        self.dictionary = None
-        self.tfidf_model = None
-        self.index = None
         self.data = None
-        self.model = None
-        self.model_index = None
+        self.model_index = model_index
         self.seg_jieba = JiebaSeg()
+        self.model_loader = None
 
     def load_data(self):
         data_chat = pd.read_csv(self.filepath_input, sep="\t", engine="python",
@@ -29,29 +35,15 @@ class RunModel():
 
     def fit(self, num_topics = None):
         self.data = self.load_data()
-        model = EmbeddingModelLoader()
-        ## could change the model used
-        # self.dictionary, self.model, self.corpus_embedding, self.model_index = model.tfidf_fit(self.data)
-        # self.dictionary, self.model, self.corpus_embedding, self.model_index, self.tfidf_model = model.lsi_fit(self.data, num_topics)
-        self.dictionary, self.model, self.corpus_embedding, self.model_index = model.elmo_fit(self.data)
-        print(len(self.corpus_embedding), self.corpus_embedding[0])
 
-        self.index = self.get_index(num_topics)
+        input_name = self.filepath_input.split("/")[-1].replace(".txt", "")
+        filepath_index = "out/" + input_name + " " + str(self.model_index) + ".index"
+        filepath_model = "out/" + input_name + " " + str(self.model_index) + ".model"
+        filepath_dict = "out/" + input_name + " " + str(self.model_index) + ".dict.pkl"
 
-    def get_index(self, num_topics = None):
-        # self.index = similarities.MatrixSimilarity(corpus_tfidf, num_features=len(self.dictionary))
+        ## load and train model
+        self.model_loader = EmbeddingModelLoader(self.model_index, self.data, filepath_index, filepath_model, filepath_dict, True, num_topics)
 
-        if self.model_index == 0:
-            ## bow
-            index = similarities.Similarity("out/", self.corpus_embedding, len(self.dictionary))
-        elif self.model_index == 1:
-            ## tfidf
-            index = similarities.Similarity("out/", self.corpus_embedding, len(self.dictionary))
-        elif self.model_index == 3 or self.model_index == 4:
-            index = similarities.Similarity("out/", self.corpus_embedding, num_topics)
-        elif self.model_index == 5:
-            index = similarities.Similarity("out/", self.corpus_embedding, 1024)
-        return index
 
     ## 先使用sentence2vec将需要匹配的句子传进去
     def sentence2vec(self, sentence):
@@ -60,20 +52,20 @@ class RunModel():
 
         if self.model_index == 0:
             ## bow
-            return self.dictionary.doc2bow(list_word)
+            return self.model_loader.dictionary.doc2bow(list_word)
         elif self.model_index == 1:
             ## tfidf
-            return self.model[self.dictionary.doc2bow(list_word)]
+            return self.model_loader.model[self.model_loader.dictionary.doc2bow(list_word)]
         elif self.model_index == 3 or self.model_index == 4:
-            vec_tfidf = self.tfidf_model[self.dictionary.doc2bow(list_word)]
-            return self.model[vec_tfidf]
+            vec_tfidf = self.model_loader.tfidf_model[self.model_loader.dictionary.doc2bow(list_word)]
+            return self.model_loader.model[vec_tfidf]
         elif self.model_index == 5:
-            return EmbeddingModelLoader.elmo_sentence2corpus(self.model, [list_word])[0]
+            return EmbeddingModelLoader.text2corpus_elmo(self.model_loader.model, [list_word])[0]
 
     def get_topk_answer(self, sentence, k=15):
         """求最相似的句子"""
         vec_sentence = self.sentence2vec(sentence)
-        sims = self.index[vec_sentence]
+        sims = self.model_loader.index[vec_sentence]
 
         # 按相似度降序排序
         sim_sort = sorted(list(enumerate(sims)), key=lambda item: item[1], reverse=True)

@@ -55,6 +55,11 @@ class UnsupervisedReranker():
         dist1= float(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
         return dist1
 
+    def get_first_sentence(self, list_list_kanswer, data):
+        if list_list_kanswer[0][0] + 1 >= data.shape[0]:
+            return 1
+        return 0
+
     def get_center_sentence(self, list_list_kanswer, data, k):
         x_sim = np.zeros((k, k))
         for i in range(k):
@@ -88,7 +93,7 @@ class UnsupervisedReranker():
     def similarity(self, list_list_kanswer, data, k):
         n_result = self.get_center_sentence(list_list_kanswer, data, k)
         # n_result = self.get_maxlen_sentence(list_list_kanswer, data, k)
-
+        # n_result = self.get_first_sentence(list_list_kanswer, data)
         return n_result, data.iat[list_list_kanswer[n_result][0]+1, 0]
 
 

@@ -3,9 +3,36 @@
 ## How to run
 python jddc_eval.py ./data/dev_question.txt ./out/test.txt
 
+## score in Online Judge
+1. 0.05353: 10per 无停用词 k = 20 取中心答案
+2. 0.050728: 10per 无停用词 k = 15 取中心答案
+1. 0.021707: 10per 都用停用词 k = 15 取中心答案
+2. 0.035051：100per 无停用词 k = 10 取中心答案
+
+
+## 目录结构：
+- data
+- code
+- resource
+
+
 ## score in test set
-### tfidf和停用词调参
-### 1per
+### unsupervised reranker
+k = 30
+ train size | embedding | 选取方式 | score 
+-|-|-|-|-
+1per | tfidf | 第一个 | 0.004963330927578965
+10per | tfidf | 第一个 | 0.005813867175527974
+1per | tfidf | 中心 | 0.013600463289462657
+10per | tfidf | 中心 | 0.01278348452600705
+0.01per | elmo | 第一个 | 0.006319689484710318
+0.01per | elmo | 中心 | 0.013490131245278697
+
+### 停用词调参
+#### 总结
+事实证明，tfidf不需要使用停用词。其他模型应该也不需要。
+
+#### 1per
  train size | 停用词 | k | 选取方式 | score 
 -|-|-|-|-
 1per | 全不使用停用词 | 10 | 中心 | 0.008554900692186014
@@ -38,6 +65,10 @@ python jddc_eval.py ./data/dev_question.txt ./out/test.txt
 1per | 聚类时使用 | 25 | 中心 | 
 1per | 都使用 | 25 | 中心 | 
 
+### k和停用词调参
+#### 总结
+tfidf确实不需要停用词。不过对于k来说，随着数据集的增大，有必要相应增大。
+
 #### 10per
  train size | 停用词 | k | 选取方式 | score 
 -|-|-|-|-
@@ -57,8 +88,8 @@ python jddc_eval.py ./data/dev_question.txt ./out/test.txt
 10per | 全不使用停用词 | 50 | 中心 | 0.01442813116502754 （开始出现大量通用性高的重复回答）
 10per | 都使用 | 10 | 中心 |  
 
-### lsi调参
-
+### 主题模型topic_num调参
+#### lsi调参
 k = 30
  train size | model | topic_num | score 
 -|-|-|-|-
@@ -79,7 +110,7 @@ k = 20
 10per | lsi | 60 | 0.010761877752782888
 
 
-### lda调参
+#### lda调参
 k = 20
  train size | model | topic_num | score 
 -|-|-|-|-
@@ -93,14 +124,3 @@ k = 30
 10per | lda | 40 | 0.008900965387194669
 10per | lda | 60 | 0.01256071632922341
 10per | lda | 80 | 0.006515710589744413
-
-## score in test set
-1. 0.050728: 10per 无停用词 k = 15 取中心答案
-1. 0.021707: 10per 都用停用词 k = 15 取中心答案
-2. 0.035051：100per 无停用词 k = 10 取中心答案
-
-
-## 目录结构：
-- data
-- code
-- resource

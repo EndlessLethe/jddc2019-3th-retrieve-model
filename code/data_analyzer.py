@@ -128,8 +128,6 @@ class DataAnalyzer():
         self.plot_distribution(self.x_session_length)
         self.plot_extrame(self.x_session_length)
 
-
-
     def print_session_top_len(self, data):
         ## 找到length对应的session index
         x_session_length_argsort = np.argsort(self.x_session_length)

@@ -6,12 +6,12 @@ import sys
 from session_loader import SessionLoader
 from run_model import RunModel
 from result_evaluator import ResultEvaluator
-
+import logging
 
 def main(filepath_input, filepath_result):
-    filepath_train = "data/chat_1per.txt"
+    filepath_train = "data/chat_0.01per.txt"
     # filepath_train = "data/chat_1per with context.txt"
-    rm = RunModel(filepath_train)
+    rm = RunModel(filepath_train, 5)
     # rm.fit(num_topics = 80)
     rm.fit()
 
