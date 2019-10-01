@@ -16,7 +16,7 @@ class DataProcesser():
     Functions:
         get_file_primary_processed()
         load_data()
-        get_file_standar_csv_format()
+        get_file_fundamental()
         is_bad_line()
         replace_special_field()
     """
@@ -43,7 +43,7 @@ class DataProcesser():
             print("The primary processed file exists")
             return
         print("start primary processing")
-        self.get_file_standar_csv_format()
+        self.get_file_fundamental()
         self.load_data(self.filepath_output_fundamental)
         self.drop_bad_line(list_filter_col)
 
@@ -63,7 +63,7 @@ class DataProcesser():
     def output_data(self, filepath):
         self.data.to_csv(filepath, encoding="utf-8", index=False, sep="\t", header=None)
 
-    def get_file_standar_csv_format(self):
+    def get_file_fundamental(self):
         """
         There may be \t in the col containing long texts.
         So that this file cannot be loaded as .csv file
@@ -161,7 +161,7 @@ class DataProcesser():
         sentence = re.sub("α", " ", sentence)
         return sentence
 
-    def get_file_reformated(self, k_per):
+    def get_file_middle(self, k_per):
         """
         This function is used to:
         1. unite QQQA into QA format
@@ -240,9 +240,16 @@ class DataProcesser():
 
         print("output file after reformating.")
 
+    @classmethod
+    def get_file_bert(self):
+        """
+        The format that bert needs is "q a label"
+        """
+
+
 dp = DataProcesser(7, 7)
 dp.get_file_primary_processed([0, 1, 2, 3, 4])
 
 ## adjust this function arg "k_per" to select k percentage data
-dp.get_file_reformated(10)
+dp.get_file_middle(10)
 

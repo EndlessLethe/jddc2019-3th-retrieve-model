@@ -4,10 +4,11 @@
 python jddc_eval.py ./data/dev_question.txt ./out/test.txt
 
 ## score in Online Judge
-1. 0.05353: 10per 无停用词 k = 20 取中心答案
-2. 0.050728: 10per 无停用词 k = 15 取中心答案
-1. 0.021707: 10per 都用停用词 k = 15 取中心答案
-2. 0.035051：100per 无停用词 k = 10 取中心答案
+1. 0.056447: 1per elmo 无停用词 k = 30 取中心答案
+1. 0.05353: 10per tfidf 无停用词 k = 20 取中心答案
+2. 0.050728: 10per tfidf 无停用词 k = 15 取中心答案
+2. 0.035051：100per tfidf 无停用词 k = 10 取中心答案
+1. 0.021707: 10per tfidf 都用停用词 k = 15 取中心答案
 
 
 ## 目录结构：
@@ -15,6 +16,15 @@ python jddc_eval.py ./data/dev_question.txt ./out/test.txt
 - code
 - resource
 
+Just put following dir in /code:
+/ELMo
+/DAM
+/JDAI-BERT
+/JDAI-WORD-EMBEDDIN1G
+
+ELMo:https://github.com/HIT-SCIR/ELMoForManyLangs
+DAM:https://github.com/baidu/Dialogue/tree/master/DAM
+JDAI-BERT， JDAI-WORD-EMBEDDIN1G:https://github.com/jd-aig/nlp_baai
 
 ## score in test set
 ### unsupervised reranker
@@ -124,3 +134,7 @@ k = 30
 10per | lda | 40 | 0.008900965387194669
 10per | lda | 60 | 0.01256071632922341
 10per | lda | 80 | 0.006515710589744413
+
+### emlo
+train size | score
+1per | 0.012641504546666425
