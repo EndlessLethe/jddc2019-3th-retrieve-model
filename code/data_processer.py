@@ -89,16 +89,16 @@ class DataProcesser():
                 return
             for line in file_in:
                 list_col = line.strip("\n").split("\t")
-                str_tmp1 = "\t".join(list_col[0:self.col_index])
+                str_tmp1 = "\t".join(list_col[0:self.col_index-1])
 
-                if self.n_col != self.col_index+1:
+                if self.n_col != self.col_index:
                     str_given_col = " ".join(list_col[self.col_index:-(self.n_col - self.col_index -1)]).strip()
                     str_given_col = re.sub("['\"', '\0']", " ", str_given_col)
                     str_given_col = re.sub("&nbsp", " ", str_given_col)
                     str_tmp2 = "\t".join(list_col[-(self.n_col-self.col_index -1):])
                     str_res = "\t".join([str_tmp1, str_given_col, str_tmp2])
                 else :
-                    str_given_col = " ".join(list_col[self.col_index:]).strip()
+                    str_given_col = " ".join(list_col[self.col_index-1:]).strip()
                     str_given_col = re.sub("['\"', '\0']", " ", str_given_col)
                     str_given_col = re.sub("&nbsp", " ", str_given_col)
                     str_res = "\t".join([str_tmp1, str_given_col])

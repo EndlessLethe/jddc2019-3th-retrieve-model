@@ -62,12 +62,12 @@ class SessionProcesser():
         with open(filepath_output, "w", encoding='utf-8') as f_out:
             cnt = 0
             for i in range(len(session_list_id)):
-                f_out.write("<session " + session_list_q[i] + ">\n")
+                f_out.write("<session " + session_list_id[i] + ">\n")
                 for j in range(session_length[i]):
-
                     f_out.write(list_a_sentence[cnt] + "\n")
                     cnt += 1
                 f_out.write("</session " + session_list_id[i] + ">\n\n")
+        print("Output result file in:", filepath_output)
 
 # data_loader = SessionProcesser()
 # session_list, session_length, session_text = data_loader.read_file()

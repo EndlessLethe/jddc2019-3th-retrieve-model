@@ -3,6 +3,16 @@
 ## How to run
 python jddc_eval.py ./data/dev_question.txt ./out/test.txt
 
+## How to run bert
+```
+--task_name=jd --vocab_file="./JDAI-BERT/vocab.txt" --bert_config_file="./JDAI-BERT/bert_config.json" --output_dir="./out" --do_eval=False --do_predict=True --data_dir=“./JDAI-BERT”
+```
+
+### build requirment
+```
+pipreqs --encoding=utf-8 ./
+```
+
 ## score in Online Judge
 1. 0.056447: 1per elmo 无停用词 k = 30 取中心答案
 1. 0.05353: 10per tfidf 无停用词 k = 20 取中心答案
@@ -25,11 +35,19 @@ Just put following dir in /code:
 ELMo:https://github.com/HIT-SCIR/ELMoForManyLangs
 DAM:https://github.com/baidu/Dialogue/tree/master/DAM
 JDAI-BERT， JDAI-WORD-EMBEDDIN1G:https://github.com/jd-aig/nlp_baai
+SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch
 
 ## score in test set
+### bert
+train size | embedding | 是否bert | score 
+-|-|-|-|-
+1per | elmo | bert | 0.01726049517292609
+1per | tfidf | bert | 0.015529321259721715
+10per | tfidf | bert | 0.017108450819094706
+
 ### unsupervised reranker
 k = 30
- train size | embedding | 选取方式 | score 
+train size | embedding | 选取方式 | score 
 -|-|-|-|-
 1per | tfidf | 第一个 | 0.004963330927578965
 10per | tfidf | 第一个 | 0.005813867175527974

@@ -94,7 +94,7 @@ class UnsupervisedReranker():
         n_result = self.get_center_sentence(list_tuple_kanswer, data, k)
         # n_result = self.get_maxlen_sentence(list_tuple_kanswer, data, k)
         # n_result = self.get_first_sentence(list_tuple_kanswer, data)
-        return n_result, data.iat[list_tuple_kanswer[n_result][0]+1, 0]
+        return n_result
 
 
 
