@@ -14,6 +14,7 @@ pipreqs --encoding=utf-8 ./
 ```
 
 ## score in Online Judge
+1. 0.058596: 10per elmo 无停用词 k = 30 取中心答案
 1. 0.056447: 1per elmo 无停用词 k = 30 取中心答案
 1. 0.05353: 10per tfidf 无停用词 k = 20 取中心答案
 2. 0.050728: 10per tfidf 无停用词 k = 15 取中心答案
@@ -44,7 +45,7 @@ train size | embedding | 是否替换 | score
 -|-|-|-
 0.01per | elmo | 不替换 | 0.0043068505835724925
 1per | elmo | 不替换 | 
-1per | tfidf | 不替换 | 
+1per | tfidf | 不替换 | 0.007319570283591345
 10per | tfidf | 不替换 | 
 
 Note：
