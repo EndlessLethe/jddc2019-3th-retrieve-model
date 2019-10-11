@@ -38,17 +38,30 @@ JDAI-BERT， JDAI-WORD-EMBEDDIN1G:https://github.com/jd-aig/nlp_baai
 SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch
 
 ## score in test set
+## 特殊字符
+bert k=30  
+train size | embedding | 是否替换 | score 
+-|-|-|-
+0.01per | elmo | 不替换 | 0.0043068505835724925
+1per | elmo | 不替换 | 
+1per | tfidf | 不替换 | 
+10per | tfidf | 不替换 | 
+
+Note：
+1. bert似乎答案不稳定，不确定为什么
+2. 
+
 ### bert
 train size | embedding | 是否bert | score 
--|-|-|-|-
+-|-|-|-
 1per | elmo | bert | 0.01726049517292609
 1per | tfidf | bert | 0.015529321259721715
 10per | tfidf | bert | 0.017108450819094706
 
 ### unsupervised reranker
-k = 30
+k = 30  
 train size | embedding | 选取方式 | score 
--|-|-|-|-
+-|-|-|-
 1per | tfidf | 第一个 | 0.004963330927578965
 10per | tfidf | 第一个 | 0.005813867175527974
 1per | tfidf | 中心 | 0.013600463289462657
@@ -62,7 +75,7 @@ train size | embedding | 选取方式 | score
 
 #### 1per
  train size | 停用词 | k | 选取方式 | score 
--|-|-|-|-
+-|-|-|-
 1per | 全不使用停用词 | 10 | 中心 | 0.008554900692186014
 1per | TFIDF使用 | 10 | 中心 | 0.007695293483604558
 1per | 检索时使用 | 10 | 中心 | 0.007417600955727696
@@ -118,9 +131,9 @@ tfidf确实不需要停用词。不过对于k来说，随着数据集的增大�
 
 ### 主题模型topic_num调参
 #### lsi调参
-k = 30
+k = 30  
  train size | model | topic_num | score 
--|-|-|-|-
+-|-|-|-
 1per | lsi | 20 | 0.01071816672917079
 1per | lsi | 30 | 0.01104208774490005
 1per | lsi | 40 | 0.013137852396458436
@@ -131,28 +144,29 @@ k = 30
 10per | lsi | 40 | 0.008701707439616796
 10per | lsi | 60 | 0.011182269704425877
 
-k = 20
+k = 20  
  train size | model | topic_num | score 
--|-|-|-|-
+-|-|-|-
 10per | lsi | 40 | 0.008171042618110087
 10per | lsi | 60 | 0.010761877752782888
 
 
 #### lda调参
-k = 20
+k = 20  
  train size | model | topic_num | score 
--|-|-|-|-
+-|-|-|-
 10per | lda | 40 | 0.008900965387194669
 10per | lda | 60 | 0.007588860032794996
 
 
-k = 30
+k = 30  
  train size | model | topic_num | score 
--|-|-|-|-
+-|-|-|-
 10per | lda | 40 | 0.008900965387194669
 10per | lda | 60 | 0.01256071632922341
 10per | lda | 80 | 0.006515710589744413
 
 ### emlo
 train size | score
+- | -
 1per | 0.012641504546666425

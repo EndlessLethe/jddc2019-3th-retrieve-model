@@ -1,5 +1,5 @@
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-from jieba_seg import JiebaSeg
+from code.jieba_seg import JiebaSeg
 import re
 
 class ResultEvaluator():

@@ -1,7 +1,7 @@
 import numpy as np
 import time
 from gensim import similarities
-from jieba_seg import JiebaSeg
+from code.jieba_seg import JiebaSeg
 
 class UnsupervisedReranker():
     def __init__(self):

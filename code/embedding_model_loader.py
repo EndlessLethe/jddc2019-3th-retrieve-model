@@ -4,13 +4,13 @@ import os
 import numpy as np
 import re
 # import sklearn
-from jieba_seg import JiebaSeg
+from code.jieba_seg import JiebaSeg
 import time
 # import logging
 from gensim import corpora, models, summarization
 import pickle
 from gensim import similarities
-from ELMo.elmoformanylangs.elmo import Embedder
+from code.ELMo.elmoformanylangs.elmo import Embedder
 
 class EmbeddingModelLoader():
     """
