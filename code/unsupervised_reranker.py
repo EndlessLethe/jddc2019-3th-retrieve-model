@@ -2,6 +2,7 @@ import numpy as np
 import time
 from gensim import similarities
 from code.jieba_seg import JiebaSeg
+import logging
 
 class UnsupervisedReranker():
     def __init__(self):
@@ -60,19 +61,20 @@ class UnsupervisedReranker():
             return 1
         return 0
 
-    def get_center_sentence(self, list_list_kanswer, data, k):
+    def get_center_sentence(self, list_kanswer, data, k):
         x_sim = np.zeros((k, k))
         for i in range(k):
-            if list_list_kanswer[i][0] + 1 >= data.shape[0]:
+            if list_kanswer[i] + 1 >= data.shape[0]:
+                logging.warning("Out of bound: " + str(list_kanswer[i]))
                 continue
-            if len(data.iat[list_list_kanswer[i][0] + 1, 0]) <= 7: continue
+            if len(data.iat[list_kanswer[i] + 1, 0]) <= 7: continue
             for j in range(k):
-                if list_list_kanswer[j][0] + 1 >= data.shape[0]:
+                if list_kanswer[j] + 1 >= data.shape[0]:
                     continue
                 if i != j:
-                    x_sim[i][j] = self.cos_dist(data.iat[list_list_kanswer[i][0] + 1, 0],
-                                                data.iat[list_list_kanswer[j][0] + 1, 0])
-        #             print("i j: " + str(i) + " " + str(j) + " " + str(cos_dist(data_chat.iat[list_list_kanswer[i][0]+1, 6], data_chat.iat[list_list_kanswer[j][0]+1, 6])))
+                    x_sim[i][j] = self.cos_dist(data.iat[list_kanswer[i] + 1, 0],
+                                                data.iat[list_kanswer[j] + 1, 0])
+        #             print("i j: " + str(i) + " " + str(j) + " " + str(cos_dist(data_chat.iat[list_kanswer[i][0]+1, 6], data_chat.iat[list_kanswer[j][0]+1, 6])))
 
         # print(x_sim)
 
@@ -90,10 +92,10 @@ class UnsupervisedReranker():
         return n_result
 
 
-    def similarity(self, list_tuple_kanswer, data, k):
-        n_result = self.get_center_sentence(list_tuple_kanswer, data, k)
-        # n_result = self.get_maxlen_sentence(list_tuple_kanswer, data, k)
-        # n_result = self.get_first_sentence(list_tuple_kanswer, data)
+    def similarity(self, list_kanswer, data, k):
+        n_result = self.get_center_sentence(list_kanswer, data, k)
+        # n_result = self.get_maxlen_sentence(list_kanswer, data, k)
+        # n_result = self.get_first_sentence(list_kanswer, data)
         return n_result
 
 

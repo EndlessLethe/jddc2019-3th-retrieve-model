@@ -7,9 +7,12 @@ from code.run_model import RunModel
 from code.result_evaluator import ResultEvaluator
 import logging
 
+l_g = logging.getLogger()
+l_g.setLevel(logging.DEBUG)
+
 def main(filepath_quz, filepath_result):
     filepath_train = "data/chat_1per.txt"
-    filepath_test = "data/dev_answer.txt"
+    filepath_answer = "data/dev_answer.txt"
 
     rm = RunModel(filepath_train, 1)
     # rm.fit(num_topics = 80)
@@ -17,7 +20,10 @@ def main(filepath_quz, filepath_result):
     rm.fit()
     rm.predict(filepath_quz, filepath_result, k = 30)
 
-    re = ResultEvaluator(filepath_result, filepath_test)
+    re = ResultEvaluator("./out/ur_result.txt", filepath_answer)
+    print(re.eval_result())
+
+    re = ResultEvaluator(filepath_result, filepath_answer)
     print(re.eval_result())
 
 

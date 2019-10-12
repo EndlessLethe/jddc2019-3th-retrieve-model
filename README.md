@@ -39,25 +39,63 @@ JDAI-BERT， JDAI-WORD-EMBEDDIN1G:https://github.com/jd-aig/nlp_baai
 SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch
 
 ## score in test set
-## 特殊字符
-bert k=30  
-train size | embedding | 是否替换 | score 
--|-|-|-
-0.01per | elmo | 不替换 | 0.0043068505835724925
-1per | elmo | 不替换 | 
-1per | tfidf | 不替换 | 0.007319570283591345
-10per | tfidf | 不替换 | 
+在整个实验过程中，我们依次确定了一下参数：
+1. 是否使用停用词 —— 不使用
+2. 选择什么样的unsupervised reranker —— 中心
+3. topk的k应该设置成多大 —— 30
+4. lsi和lda的embedding效果 —— 被elmo完爆
+5. 是否输入全部数据，或者只输入q —— 在所有模型上，只输入q都有提升
+5. 是否在embedding时进行特殊字符的替换 —— 不替换
+6. bert的提升效果 —— 
+
 
 Note：
-1. bert似乎答案不稳定，不确定为什么
-2. 
+1. bert答案不稳定
+2. elmo的答案也不稳定
+3. 可能是因为batch的padding
+
+
+Note：下面的表格没有按照上述顺序。
+
+
 
 ### bert
+k=30 中心 替换 只输入q  
 train size | embedding | 是否bert | score 
 -|-|-|-
-1per | elmo | bert | 0.01726049517292609
-1per | tfidf | bert | 0.015529321259721715
-10per | tfidf | bert | 0.017108450819094706
+1per | elmo | ur | 
+1per | elmo | bert | 
+1per | tfidf | ur | 
+1per | tfidf | bert | 
+10per | tfidf | bert | 
+10per | tfidf | ur | 
+
+### 特殊字符
+bert k=30 全部数据  
+train size | embedding | 是否替换 | score 
+-|-|-|-
+0.01per | elmo | 不替换 | 0.010437204998100533
+0.01per | tfidf | 不替换 | 0.012997054348273201
+0.1per | elmo | 不替换 | 0.011414544946930654
+1per | tfidf | 不替换 | 0.012848696840693473
+0.01per | elmo | 替换 | 0.010099141591314545
+0.01per | tfidf | 替换 | 0.010073682739222817
+0.1per | elmo | 替换 | 0.011414544946930654
+1per | tfidf | 替换 | 0.01059010512872386
+
+结论：不替换特殊字符会带来提升
+
+### 是否输入全部数据
+使用不替换数据 k=30 中心  
+train size | embedding | 是否全量数据 | score 
+-|-|-|-
+0.01per | tdidf | 只有q | 0.014383755741864323
+0.01per | tdidf | 全部数据 | 0.012997054348273201
+0.01per | elmo | 只有q | 0.015390332452465709
+0.01per | elmo | 全部数据 | 0.010437204998100533
+1per | tdidf | 只有q | 0.013483501888183026
+1per | tdidf | 全部数据 | 0.012848696840693473
+
 
 ### unsupervised reranker
 k = 30  
@@ -166,8 +204,3 @@ k = 30
 10per | lda | 40 | 0.008900965387194669
 10per | lda | 60 | 0.01256071632922341
 10per | lda | 80 | 0.006515710589744413
-
-### emlo
-train size | score
-- | -
-1per | 0.012641504546666425

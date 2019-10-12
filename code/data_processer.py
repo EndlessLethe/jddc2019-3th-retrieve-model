@@ -55,7 +55,8 @@ class DataProcesser():
         self.drop_bad_line(list_filter_col)
 
         for i in range(self.data.shape[0]):
-            self.data.iat[i, self.col_index] = self.replace_special_field_v1(self.data.iat[i, self.col_index])
+            # self.data.iat[i, self.col_index] = self.replace_special_field_v1(self.data.iat[i, self.col_index])
+            self.data.iat[i, self.col_index] = self.replace_special_field_v2(self.data.iat[i, self.col_index])
 
         self.output_data(self.filepath_output_primary)
         print("output file is primary processed.")
@@ -314,5 +315,5 @@ dp = DataProcesser(7, 7)
 dp.get_file_primary([0, 1, 2, 3, 4], is_replace= True)
 
 ## adjust this function arg "k_per" to select k percentage data
-dp.get_file_middle(1)
+dp.get_file_middle(0.1)
 

@@ -1,3 +1,6 @@
 ## ignore all but readme.txt
 *
 !JDDC_readme.txt
+!stoplist.txt
+!dev_answer.txt
+!dev_question.txt

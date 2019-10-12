@@ -9,6 +9,7 @@ import os
 import pickle
 from code.session_processer import SessionProcesser
 from code.bert.run_classifier import run_classifier
+import logging
 
 class RunModel():
     """
@@ -27,7 +28,6 @@ class RunModel():
         self.model_index = model_index
         self.seg_jieba = JiebaSeg()
         self.model_loader = None
-        self.k = None
         self.dict_q_index_to_data_index = None
 
 
@@ -41,7 +41,10 @@ class RunModel():
         self.data = self.load_data()
         input_name = self.filepath_input.split("/")[-1].replace(".txt", "")
 
-        ## data sent to EmbeddingModelLoader is only questions.
+        ## data sent to EmbeddingModelLoader is only questions or all data.
+        # self.dict_q_index_to_data_index = None
+        # data_q = self.data
+
         list_is_picked = self.get_dict_q_index_to_data_index()
         data_q = self.data[list_is_picked]
 
@@ -70,6 +73,7 @@ class RunModel():
     def get_dict_q_index_to_data_index(self):
         dict_q2data = {}
         list_is_picked = []
+
         data_chat = pd.read_csv(self.filepath_input, sep="\t", engine="python",
                                 warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header=None)[[2]]
         cnt = 0
@@ -82,15 +86,21 @@ class RunModel():
                 list_is_picked.append(False)
         self.dict_q_index_to_data_index = dict_q2data
 
-        print("cnt:", cnt)
-        print("Len:", len(list_is_picked))
+        print("Input Data Size:", len(list_is_picked))
 
         return list_is_picked
 
     def get_data_index(self, q_index):
-        return self.dict_q_index_to_data_index[q_index]
+        if self.dict_q_index_to_data_index != None:
+            return self.dict_q_index_to_data_index[q_index]
+        else :
+            return q_index
 
     def get_list_q_candidate_index(self, texts, k):
+        """
+        list_q_candidate_index has a shape: n_q * k * 2
+            The last dim is (sentence index, similarity score)
+        """
         list_q_candidate_index = []
 
         corpus_vec = self.texts2corpus(texts)
@@ -98,9 +108,10 @@ class RunModel():
             list_candidate = self.get_topk_answer(vec_sentence, k)
             list_q_candidate_index.append(list_candidate)
 
+        list_q_candidate_index = self.reformat_list_q_candidate_index(list_q_candidate_index)
         return list_q_candidate_index
 
-    def get_topk_answer(self, vec_sentence, k=15):
+    def get_topk_answer(self, vec_sentence, k):
         """求最相似的句子"""
         sims = self.model_loader.index[vec_sentence]
 
@@ -110,48 +121,72 @@ class RunModel():
 
         return top_k
 
-    def predict(self, filepath_input, filepath_result, k = 15):
-        self.k = 15
+    def predict(self, filepath_input, filepath_result, k):
         session_list_id, session_length, session_list_q = SessionProcesser.read_file(filepath_input, use_context=False)
 
+        ## get list_q_candidate and output to examine
         list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
-        print(list_q_candidate_index)
 
-        # list_q_index = self.get_unsupervised_reranker_result(self.list_q_candidate_index)
+        filepath_q_candidate = "./out/q_candidate.txt"
+        self.output_q_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
 
-        self.output_bert_format(list_q_candidate_index, session_list_q)
-        run_classifier()
-        list_q_index = self.get_bert_result(list_q_candidate_index, k)
-
+        ## use unsupervised reranker
+        list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
+        logging.debug(str(list_q_index))
         list_answer = self.get_answer(list_q_index)
-
         SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        SessionProcesser.output_file("./out/ur_result.txt", session_list_id, session_length, session_list_q, list_answer)
+
+        ## use bert as reranker
+        # filepath_bert_test = "./code/bert/JDAI-BERT/test.tsv"
+        # run_classifier()
+        # self.output_q_candidate(list_q_candidate_index, session_list_q, filepath_bert_test)
+        # list_q_index = self.get_bert_result(list_q_candidate_index, k)
+        # list_answer = self.get_answer(list_q_index)
+        # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+
         return list_q_index, list_answer
 
     def get_answer(self, list_q_index):
         list_answer = []
         for i in range(len(list_q_index)):
-            index_data = self.get_data_index(list_q_index[i])
-            list_answer.append(self.data.iat[index_data + 1, 0])
+            list_answer.append(self.data.iat[list_q_index[i]+1, 0])
         return list_answer
 
-    def get_unsupervised_reranker_result(self, list_q_candidate_index):
+    def get_unsupervised_reranker_result(self, list_q_candidate_index, k):
         ur = UnsupervisedReranker()
         list_q_index = []
 
+        cnt = 0
         for list_candidate in list_q_candidate_index:
-            q_index = ur.similarity(list_candidate, self.data)
-            list_q_index.append(q_index)
+            q_rank = ur.similarity(list_candidate, self.data, k)
+            list_q_index.append(list_q_candidate_index[cnt][q_rank])
+            cnt += 1
         return list_q_index
 
-    def output_bert_format(self, list_q_candidate, session_list_q):
-        filepath_bert_test = "./code/bert/JDAI-BERT/test.tsv"
-        with open(filepath_bert_test, "w", encoding="utf-8") as f_bert:
+    def reformat_list_q_candidate_index(self, list_q_candidate_index):
+        """
+        The input list_q_candidate_index has a quite strange shape : n_q * k * 2.
+        And its index is data_q index not data_all index
+        So this function is uesed to :
+        1. reshape it as 2-d array with shape n_q * k.
+        2. transform data_q index into data_all index
+        """
+        list_new = []
+        for list_k in list_q_candidate_index:
+            list_k_index = []
+            for i in range(len(list_k)):
+                list_k_index.append(self.get_data_index(list_k[i][0]))
+            list_new.append(list_k_index)
+        return list_new
+
+    def output_q_candidate(self, list_q_candidate, session_list_q, filepath):
+        with open(filepath, "w", encoding="utf-8") as f_out:
             for i in range(len(session_list_q)):
                 for j in range(len(list_q_candidate[i])):
-                    q_index = list_q_candidate[i][j][0]
-                    f_bert.write(session_list_q[i] + "\t" + self.data.iat[self.get_data_index(q_index), 0] + "\t0\n")
-        print("output Bert QQ pair file.")
+                    q_index = list_q_candidate[i][j]
+                    f_out.write(session_list_q[i] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
+        print("output q candidate file to:", filepath)
 
     def get_bert_result(self, list_q_candidate_index, k):
         filepath_bert_result = "./code/bert/out/test_results.tsv"
@@ -163,6 +198,6 @@ class RunModel():
 
         list_q_index = []
         for i in range(x_lable.shape[0]):
-            list_q_index.append(list_q_candidate_index[i][x_lable[i]][0])
+            list_q_index.append(list_q_candidate_index[i][x_lable[i]])
 
         return list_q_index
