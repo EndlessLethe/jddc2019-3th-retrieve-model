@@ -6,7 +6,7 @@ import re
 # import sklearn
 from code.jieba_seg import JiebaSeg
 import time
-# import logging
+import logging
 from gensim import corpora, models, summarization
 import pickle
 from gensim import similarities
@@ -24,6 +24,8 @@ class EmbeddingModelLoader():
         self.model = None
         self.index = None
         self.seg_jieba = JiebaSeg()
+        self.data_bert_embedding = None
+        self.dict_word2index = None
 
         filepath_index =  "out/" + str(self.model_index) + " " + input_name + ".index"
         filepath_model = "out/" + str(self.model_index) + " " + input_name + ".model"
@@ -38,18 +40,24 @@ class EmbeddingModelLoader():
         # logging.debug("Training model.")
         else:
             if self.model_index == 1:
-                self.corpus_embedding = self.tfidf_fit(data)
+                corpus_embedding = self.tfidf_fit(data)
             elif self.model_index == 3:
-                self.corpus_embedding = self.lsi_fit(data, num_topics)
+                corpus_embedding = self.lsi_fit(data, num_topics)
             elif self.model_index == 5:
-                self.corpus_embedding = self.elmo_fit(data)
+                corpus_embedding = self.elmo_fit_large(data)
+            elif self.model_index == 6:
+                corpus_embedding = self.bert_fit(data)
 
             # logging.debug("Creating index.")
-            self.index = self.get_index(filepath_index, num_topics)
+            self.index = self.get_index(filepath_index, corpus_embedding, num_topics)
             self.save_data(filepath_index, filepath_model, filepath_dict, filepath_tfidf_model)
 
     def load_model(self, filepath_index, filepath_model, filepath_dict, filepath_tfidf_model = None):
         # logging.debug("Loading existing model.")
+        self.index = similarities.Similarity.load(filepath_index)
+        if self.model_index == 6:
+            return
+
         with open(filepath_dict, 'rb') as f:
             self.dictionary = pickle.load(f)
         if self.model_index == 1:
@@ -61,36 +69,94 @@ class EmbeddingModelLoader():
         elif self.model_index == 4:
             self.model = models.LdaModel.load(filepath_model)
         elif self.model_index == 5:
-            self.model = Embedder("./code/ELMo/zhs.model/")
+            self.model = Embedder("./code/ELMo/zhs.model/", 16)
 
         if os.path.exists(filepath_tfidf_model):
             self.tfidf_model = models.TfidfModel.load(filepath_model)
 
-        self.index = similarities.Similarity.load(filepath_index)
+
 
     def save_data(self, filepath_index, filepath_model, filepath_dict, filepath_tfidf_model):
         ## save the result
+        self.index.save(filepath_index)
+
+        if self.model_index == 6:
+            return
+
         with open(filepath_dict, 'wb') as f:
             pickle.dump(self.dictionary, f)
         if self.model_index != 5:
             self.model.save(filepath_model)
             if self.tfidf_model != None:
                 self.tfidf_model.save(filepath_tfidf_model)
-        self.index.save(filepath_index)
 
-    def get_index(self, filepath_index, num_topics = None):
+
+    def bert_fit(self, data):
+        self.use_bert_embedding()
+        corpus_bert = self.data2corpus_bert(data)
+        return corpus_bert
+
+    def data2corpus_bert(self, data):
+        data.columns = [0]
+        corpus_bert = self.list_sentence_to_corpus_bert(data[0].values)
+        return corpus_bert
+
+    def list_sentence_to_corpus_bert(self, list_sentence):
+        corpus_bert = []
+
+        for i in range(len(list_sentence)):
+            list_word_embedding = []
+            sentence = list_sentence[i]
+            corpus_sentence = []
+            for str_char in sentence:
+                try:
+                    word_embedding = list(self.data_bert_embedding.iloc[self.dict_word2index[str_char]])
+                    list_word_embedding.append(word_embedding)
+                except:
+                    # logging.warning("char '" + str_char + "' is not in dict.")
+                    continue
+            if len(list_word_embedding) != 0:
+                vec_sentence = np.sum(list_word_embedding, axis=0) / len(list_word_embedding)
+                cnt = 0
+                for vec in vec_sentence:
+                    corpus_sentence.append((cnt, vec))
+                    cnt += 1
+            else:
+                pass
+            corpus_bert.append(corpus_sentence)
+
+            if i % 1000 == 0:
+                logging.info("Finished {0} sentences.".format(i))
+
+        return corpus_bert
+
+    def use_bert_embedding(self):
+        filepath_bert_data = "./code/bert/JDAI-WORD-EMBEDDING/JDAI-Word-Embedding.txt"
+        data_bert = pd.read_csv(filepath_bert_data, sep = " ", skiprows = 1, header = None)
+        data_bert.pop(301)
+        data_word = data_bert.pop(0)
+        logging.debug("bert embedding shape: " + str(data_bert.shape))
+        dict_word2index = {}
+        for i in range(data_word.shape[0]):
+            dict_word2index[data_word[i]] = i
+        self.dict_word2index = dict_word2index
+        self.data_bert_embedding = data_bert
+
+    def get_index(self, filepath_index, corpus_embedding, num_topics = None):
         filepath_index += ".tmp"
         # self.index = similarities.MatrixSimilarity(corpus_tfidf, num_features=len(self.dictionary))
         if self.model_index == 0:
             ## bow
-            index = similarities.Similarity(filepath_index, self.corpus_embedding, len(self.dictionary))
+            index = similarities.Similarity(filepath_index, corpus_embedding, len(self.dictionary))
         elif self.model_index == 1:
             ## tfidf
-            index = similarities.Similarity(filepath_index, self.corpus_embedding, len(self.dictionary))
+            index = similarities.Similarity(filepath_index, corpus_embedding, len(self.dictionary))
         elif self.model_index == 3 or self.model_index == 4:
-            index = similarities.Similarity(filepath_index, self.corpus_embedding, num_topics)
+            index = similarities.Similarity(filepath_index, corpus_embedding, num_topics)
         elif self.model_index == 5:
-            index = similarities.Similarity(filepath_index, self.corpus_embedding, 1024)
+            index = similarities.Similarity(filepath_index, corpus_embedding, 1024)
+        elif self.model_index == 6:
+            index = similarities.Similarity(filepath_index, corpus_embedding, 300)
         return index
 
     def get_texts(self, data):
@@ -136,12 +202,41 @@ class EmbeddingModelLoader():
         corpus_lda = self.corpus_tfidf2lda(corpus_tfidf)
         return corpus_lda
 
-    def elmo_fit(self, data):
-        self.model = Embedder("./code/ELMo/zhs.model/")
+    def elmo_fit_small(self, data):
+        self.model = Embedder("./code/ELMo/zhs.model/", 64)
         texts = self.get_texts(data)
         self.dictionary = corpora.Dictionary(texts)
 
         corpus_elmo = self.text2corpus_elmo(texts)
+        return corpus_elmo
+
+    def elmo_fit_large(self, data):
+        self.model = Embedder("./code/ELMo/zhs.model/", 16)
+        texts = self.get_texts(data)
+        self.dictionary = corpora.Dictionary(texts)
+
+        corpus_elmo = []
+        list_sentence = []
+        for i in range(data.shape[0]):
+            corpus_sentence = []
+            if i % 10000 == 0 and i != 0:
+                list_sentence.append(texts[i])
+                list_word_embedding = self.model.sents2elmo(list_sentence)
+
+                for j in range(len(list_word_embedding)):
+                    vec_sentence = np.sum(list_word_embedding[j], axis = 0) / len(list_word_embedding[j])
+                    cnt = 0
+                    for vec in vec_sentence:
+                        corpus_sentence.append((cnt, vec))
+                        cnt += 1
+                    corpus_elmo.append(corpus_sentence)
+                list_sentence = []
+
+            if i % 1000 == 0:
+                logging.info("Finished {0} sentences.".format(i))
+
+            else :
+                list_sentence.append(texts[i])
         return corpus_elmo
 
 

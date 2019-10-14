@@ -312,8 +312,8 @@ class DataProcesser():
         pass
 
 dp = DataProcesser(7, 7)
-dp.get_file_primary([0, 1, 2, 3, 4], is_replace= True)
+dp.get_file_primary([0, 1, 2, 3, 4], is_replace= False)
 
 ## adjust this function arg "k_per" to select k percentage data
-dp.get_file_middle(0.1)
+dp.get_file_middle(1)
 

@@ -11,10 +11,10 @@ l_g = logging.getLogger()
 l_g.setLevel(logging.DEBUG)
 
 def main(filepath_quz, filepath_result):
-    filepath_train = "data/chat_1per.txt"
+    filepath_train = "data/chat_0.1per.txt"
     filepath_answer = "data/dev_answer.txt"
 
-    rm = RunModel(filepath_train, 1)
+    rm = RunModel(filepath_train, 5)
     # rm.fit(num_topics = 80)
 
     rm.fit()

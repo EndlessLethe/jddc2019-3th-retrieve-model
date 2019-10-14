@@ -60,11 +60,13 @@ Note：下面的表格没有按照上述顺序。
 
 
 ### bert
-k=30 中心 替换 只输入q  
+k=30 中心 只输入q  
 train size | embedding | 是否bert | score 
 -|-|-|-
-1per | elmo | ur | 
-1per | elmo | bert | 
+0.1per | elmo | ur | 0.012025974229432725
+0.1per | elmo | bert | 0.006229655301173301
+1per | elmo | ur | 0.013615373535648321
+1per | elmo | bert | 0.0055121695669156446
 1per | tfidf | ur | 
 1per | tfidf | bert | 
 10per | tfidf | bert | 
@@ -78,10 +80,12 @@ train size | embedding | 是否替换 | score
 0.01per | tfidf | 不替换 | 0.012997054348273201
 0.1per | elmo | 不替换 | 0.011414544946930654
 1per | tfidf | 不替换 | 0.012848696840693473
+1per | elmo | 不替换 | 
 0.01per | elmo | 替换 | 0.010099141591314545
 0.01per | tfidf | 替换 | 0.010073682739222817
 0.1per | elmo | 替换 | 0.011414544946930654
 1per | tfidf | 替换 | 0.01059010512872386
+1per | elmo | 替换 | 0.01409269910542025
 
 结论：不替换特殊字符会带来提升
 
