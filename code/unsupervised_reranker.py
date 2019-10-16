@@ -8,7 +8,7 @@ class UnsupervisedReranker():
     def __init__(self):
         self.seg_jieba = JiebaSeg()
 
-    def get_word_vector(self, s1,s2):
+    def get_word_vector(self, s1, s2):
         """
         :param s1: 句子1
         :param s2: 句子2
@@ -75,8 +75,6 @@ class UnsupervisedReranker():
                     x_sim[i][j] = self.cos_dist(data.iat[list_kanswer[i] + 1, 0],
                                                 data.iat[list_kanswer[j] + 1, 0])
         #             print("i j: " + str(i) + " " + str(j) + " " + str(cos_dist(data_chat.iat[list_kanswer[i][0]+1, 6], data_chat.iat[list_kanswer[j][0]+1, 6])))
-
-        # print(x_sim)
 
         x_sum = np.zeros((k,))
         for i in range(k):

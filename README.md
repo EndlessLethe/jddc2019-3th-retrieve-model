@@ -47,6 +47,7 @@ SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch
 5. 是否输入全部数据，或者只输入q —— 在所有模型上，只输入q都有提升
 5. 是否在embedding时进行特殊字符的替换 —— 不替换
 6. bert的提升效果 —— 
+7. bert embedding
 
 
 Note：
@@ -57,9 +58,19 @@ Note：
 
 Note：下面的表格没有按照上述顺序。
 
+### bert embedding
+
+train size | embedding | 是否bert | k | score 
+-|-|-|-|-
+10per | bert | ur | 30 | 0.013114113960232704
+10per | bert | bert | 30 | 0.005994437205573867
+10per | bert | ur | 20 | 0.013114113960232704
+10per | bert | bert | 20 | 0.01069082542094502
+10per | bert | ur | 10 | 0.013114113960232704
+10per | bert | bert | 10 | 0.006636543409574341
 
 
-### bert
+### bert and bert
 k=30 中心 只输入q  
 train size | embedding | 是否bert | score 
 -|-|-|-
@@ -71,6 +82,7 @@ train size | embedding | 是否bert | score
 1per | tfidf | bert | 
 10per | tfidf | bert | 
 10per | tfidf | ur | 
+
 
 ### 特殊字符
 bert k=30 全部数据  

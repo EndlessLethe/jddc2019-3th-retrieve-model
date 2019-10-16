@@ -3,6 +3,11 @@ import os
 import re
 import numpy as np
 from data_analyzer import DataAnalyzer
+import random
+from unsupervised_reranker import UnsupervisedReranker
+import logging
+l_g = logging.getLogger()
+l_g.setLevel(logging.DEBUG)
 
 class DataProcesser():
     """
@@ -305,15 +310,55 @@ class DataProcesser():
         print("output file after reformating.")
 
     @classmethod
-    def get_file_bert(self):
+    def get_train_file_bert(cls):
         """
         The format that bert needs is "q a label"
         """
-        pass
+        filepath_input = "../data/chat_100per.txt"
+        data_total = pd.read_csv(filepath_input, sep = "\t")
+        logging.info("Total data size: " + str(data_total.shape[0]))
 
-dp = DataProcesser(7, 7)
-dp.get_file_primary([0, 1, 2, 3, 4], is_replace= False)
+        filepath_output = "./bert/data/train.tsv"
+        with open(filepath_output, "w", encoding="utf-8") as f_out:
+            for i in range(data_total.shape[0]):
+                if i == data_total.shape[0]-1:
+                    break
+                if data_total.iat[i, 2] == 0 and data_total.iat[i+1, 2] == 1 and \
+                    data_total.iat[i, 0] == data_total.iat[i+1, 0]:
+                    q = data_total.iat[i, 6]
+                    true_a = data_total.iat[i+1, 6]
+                    f_out.write(q + "\t" + true_a + "\t1\n")
 
-## adjust this function arg "k_per" to select k percentage data
-dp.get_file_middle(1)
+                    flag = True
+                    while flag:
+                        index_false_a = random.randint(0, data_total.shape[0]-5)
+                        while data_total.iat[index_false_a, 2] != 1:
+                            index_false_a += 1
 
+                        ur = UnsupervisedReranker()
+                        sim_score = ur.cos_dist(data_total.iat[i+1, 6], data_total.iat[index_false_a, 6])
+                        if sim_score < 0.3:
+                            # logging.debug("Similarity: " + str(sim_score))
+                            # logging.debug(data_total.iat[i+1, 6])
+                            # logging.debug(data_total.iat[index_false_a, 6])
+                            flag = False
+                    false_a = data_total.iat[index_false_a, 6]
+                    f_out.write(q + "\t" + false_a + "\t0\n")
+                if i % 10000 == 0:
+                    logging.info("Finished {0} sentences.".format(i))
+
+            # logging.info("Generating Positive samples: " + str(len(list_true_a)))
+            # logging.info("Generating Negetive samples: " + str(len(list_false_a)))
+
+            # for i in range(len(list_q)):
+            #     f_out.write(list_q[i] + "\t" + list_true_a + "\t1\n")
+            #     f_out.write(list_q[i] + "\t" + list_false_a + "\t0\n")
+        logging.info("output candidate file as bert format to:" + filepath_output)
+
+# dp = DataProcesser(7, 7)
+# dp.get_file_primary([0, 1, 2, 3, 4], is_replace= False)
+#
+# ## adjust this function arg "k_per" to select k percentage data
+# dp.get_file_middle(100)
+
+DataProcesser.get_train_file_bert()

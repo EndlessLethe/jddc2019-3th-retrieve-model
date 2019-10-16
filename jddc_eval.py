@@ -15,16 +15,15 @@ def main(filepath_quz, filepath_result):
     filepath_answer = "data/dev_answer.txt"
 
     rm = RunModel(filepath_train, 5)
-    # rm.fit(num_topics = 80)
 
     rm.fit()
     rm.predict(filepath_quz, filepath_result, k = 30)
-
-    re = ResultEvaluator("./out/ur_result.txt", filepath_answer)
-    print(re.eval_result())
-
-    re = ResultEvaluator(filepath_result, filepath_answer)
-    print(re.eval_result())
+    #
+    # re = ResultEvaluator("./out/ur_result.txt", filepath_answer)
+    # print(re.eval_result())
+    #
+    # re = ResultEvaluator(filepath_result, filepath_answer)
+    # print(re.eval_result())
 
 
 filepath_quz = "data/dev_question.txt"

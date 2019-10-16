@@ -8,7 +8,7 @@ import numpy as np
 import os
 import pickle
 from code.session_processer import SessionProcesser
-from code.bert.run_classifier import run_classifier
+
 import logging
 
 class RunModel():
@@ -16,14 +16,14 @@ class RunModel():
     This Class is used to connect all components, such as embedding part for training,
     and search part, rerank part for predicting.
     """
-    def __init__(self, filepath_input, model_index):
+    def __init__(self, filepath_train, model_index):
         """
         Args:
-            filepath_input: the filepath of training data
+            filepath_train: the filepath of training data
             model_index: use model_index to create the given embedding model.
             0 - bow, 1 - tfidf, 2 - bm25, 3 - lsi, 4 - lda, 5 - elmo
         """
-        self.filepath_input = filepath_input
+        self.filepath_input = filepath_train
         self.data = None
         self.model_index = model_index
         self.seg_jieba = JiebaSeg()
@@ -41,10 +41,7 @@ class RunModel():
         self.data = self.load_data()
         input_name = self.filepath_input.split("/")[-1].replace(".txt", "")
 
-        ## data sent to EmbeddingModelLoader is only questions or all data.
-        # self.dict_q_index_to_data_index = None
-        # data_q = self.data
-
+        ## data sent to EmbeddingModelLoader is only questions.
         list_is_picked = self.get_dict_q_index_to_data_index()
         data_q = self.data[list_is_picked]
 
@@ -95,10 +92,8 @@ class RunModel():
         return list_is_picked
 
     def get_data_index(self, q_index):
-        if self.dict_q_index_to_data_index != None:
-            return self.dict_q_index_to_data_index[q_index]
-        else :
-            return q_index
+        return self.dict_q_index_to_data_index[q_index]
+
 
     def get_list_q_candidate_index(self, texts, k):
         """
@@ -139,6 +134,8 @@ class RunModel():
 
         ## get list_q_candidate and output to examine
         list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
+        # print(list_q_candidate_index)
+
         list_a_candidate_index = self.get_list_a_candidate_index(list_q_candidate_index)
 
         ## output candidate data for bert amd debugging
@@ -159,6 +156,7 @@ class RunModel():
         # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         ## use bert as reranker
+        from code.bert.run_classifier import run_classifier
         run_classifier()
         list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
         list_answer = self.get_answer(list_q_index)
@@ -189,6 +187,7 @@ class RunModel():
         for list_candidate in list_q_candidate_index:
             q_rank = ur.similarity(list_candidate, self.data, k)
             list_q_index.append(list_q_candidate_index[cnt][q_rank])
+            # print("ur result", q_rank, list_q_candidate_index[cnt][q_rank])
             cnt += 1
         return list_q_index
 
@@ -221,7 +220,6 @@ class RunModel():
         list_q_index = []
         for i in range(x_lable.shape[0]):
             list_q_index.append(list_q_candidate_index[i][x_lable[i]])
-
         return list_q_index
 
     @classmethod

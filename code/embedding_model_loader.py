@@ -10,7 +10,6 @@ import logging
 from gensim import corpora, models, summarization
 import pickle
 from gensim import similarities
-from code.ELMo.elmoformanylangs.elmo import Embedder
 
 class EmbeddingModelLoader():
     """
@@ -33,7 +32,7 @@ class EmbeddingModelLoader():
         filepath_dict = "out/" + str(self.model_index) + " " + input_name + ".dict.pkl"
 
         ## load model from existing files.
-        if filepath_dict != None and os.path.exists(filepath_dict) and is_load == True:
+        if filepath_index != None and os.path.exists(filepath_index) and is_load == True:
             self.load_model(filepath_index, filepath_model, filepath_dict, filepath_tfidf_model)
 
         ## when init embedding model, train it at once
@@ -69,6 +68,7 @@ class EmbeddingModelLoader():
         elif self.model_index == 4:
             self.model = models.LdaModel.load(filepath_model)
         elif self.model_index == 5:
+            from code.ELMo.elmoformanylangs.elmo import Embedder
             self.model = Embedder("./code/ELMo/zhs.model/", 16)
 
         if os.path.exists(filepath_tfidf_model):
@@ -144,7 +144,7 @@ class EmbeddingModelLoader():
 
     def get_index(self, filepath_index, corpus_embedding, num_topics = None):
         filepath_index += ".tmp"
-        # self.index = similarities.MatrixSimilarity(corpus_tfidf, num_features=len(self.dictionary))
+
         if self.model_index == 0:
             ## bow
             index = similarities.Similarity(filepath_index, corpus_embedding, len(self.dictionary))
@@ -203,6 +203,7 @@ class EmbeddingModelLoader():
         return corpus_lda
 
     def elmo_fit_small(self, data):
+        from code.ELMo.elmoformanylangs.elmo import Embedder
         self.model = Embedder("./code/ELMo/zhs.model/", 64)
         texts = self.get_texts(data)
         self.dictionary = corpora.Dictionary(texts)
@@ -211,6 +212,7 @@ class EmbeddingModelLoader():
         return corpus_elmo
 
     def elmo_fit_large(self, data):
+        from code.ELMo.elmoformanylangs.elmo import Embedder
         self.model = Embedder("./code/ELMo/zhs.model/", 16)
         texts = self.get_texts(data)
         self.dictionary = corpora.Dictionary(texts)
@@ -218,12 +220,11 @@ class EmbeddingModelLoader():
         corpus_elmo = []
         list_sentence = []
         for i in range(data.shape[0]):
-            corpus_sentence = []
             if i % 10000 == 0 and i != 0:
                 list_sentence.append(texts[i])
                 list_word_embedding = self.model.sents2elmo(list_sentence)
-
                 for j in range(len(list_word_embedding)):
+                    corpus_sentence = []
                     vec_sentence = np.sum(list_word_embedding[j], axis = 0) / len(list_word_embedding[j])
                     cnt = 0
                     for vec in vec_sentence:
@@ -232,11 +233,22 @@ class EmbeddingModelLoader():
                     corpus_elmo.append(corpus_sentence)
                 list_sentence = []
 
-            if i % 1000 == 0:
-                logging.info("Finished {0} sentences.".format(i))
-
+                logging.info('Finished {0} sentences.'.format(i))
             else :
                 list_sentence.append(texts[i])
+
+        if len(list_sentence) != 0:
+            list_word_embedding = self.model.sents2elmo(list_sentence)
+            for j in range(len(list_word_embedding)):
+                corpus_sentence = []
+                vec_sentence = np.sum(list_word_embedding[j], axis=0) / len(list_word_embedding[j])
+                cnt = 0
+                for vec in vec_sentence:
+                    corpus_sentence.append((cnt, vec))
+                    cnt += 1
+                corpus_elmo.append(corpus_sentence)
+
+
         return corpus_elmo
 
 
