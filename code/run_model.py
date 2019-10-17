@@ -8,7 +8,6 @@ import numpy as np
 import os
 import pickle
 from code.session_processer import SessionProcesser
-
 import logging
 
 class RunModel():
@@ -23,31 +22,31 @@ class RunModel():
             model_index: use model_index to create the given embedding model.
             0 - bow, 1 - tfidf, 2 - bm25, 3 - lsi, 4 - lda, 5 - elmo
         """
-        self.filepath_input = filepath_train
-        self.data = None
+        self.filepath_train = filepath_train
+
         self.model_index = model_index
         self.seg_jieba = JiebaSeg()
         self.model_loader = None
         self.dict_q_index_to_data_index = None
+        self.data = self.load_data()
+
+        ## data sent to EmbeddingModelLoader is only questions.
+        self.list_is_picked = self.get_dict_q_index_to_data_index()
 
 
     def load_data(self):
-        data_chat = pd.read_csv(self.filepath_input, sep="\t", engine="python",
+        data_chat = pd.read_csv(self.filepath_train, sep="\t", engine="python",
                                 warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header=None)
         # return data_chat[[0]]
         return data_chat[[6]]
 
     def fit(self, num_topics = None):
-        self.data = self.load_data()
-        input_name = self.filepath_input.split("/")[-1].replace(".txt", "")
-
-        ## data sent to EmbeddingModelLoader is only questions.
-        list_is_picked = self.get_dict_q_index_to_data_index()
-        data_q = self.data[list_is_picked]
+        ## "data/chat_0.1per.txt" and get "chat_0.1per"
+        input_name = self.filepath_train.split("/")[-1].replace(".txt", "")
+        data_q = self.data[self.list_is_picked]
 
         ## load and train model
         self.model_loader = EmbeddingModelLoader(self.model_index, data_q, input_name, True, num_topics)
-
 
     ## 先使用sentence2vec将需要匹配的句子传进去
     def list_sentence_to_corpus(self, list_sentence):
@@ -74,7 +73,7 @@ class RunModel():
         dict_q2data = {}
         list_is_picked = []
 
-        data_chat = pd.read_csv(self.filepath_input, sep="\t", engine="python",
+        data_chat = pd.read_csv(self.filepath_train, sep="\t", engine="python",
                                 warn_bad_lines=True, error_bad_lines=False, encoding="UTF-8", header=None)[[2]]
         cnt = 0
         for i in range(data_chat.shape[0]):
@@ -134,7 +133,7 @@ class RunModel():
 
         ## get list_q_candidate and output to examine
         list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
-        # print(list_q_candidate_index)
+        logging.debug("list_q_candidate_index: " + str(list_q_candidate_index))
 
         list_a_candidate_index = self.get_list_a_candidate_index(list_q_candidate_index)
 
@@ -143,12 +142,12 @@ class RunModel():
         self.output_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
         filepath_q_candidate = "./out/a_candidate.txt"
         self.output_candidate(list_a_candidate_index, session_list_q, filepath_q_candidate)
-        filepath_bert_test = "./code/bert/data/test.tsv"
+        filepath_bert_test = "./code/albert_zh/data/test.tsv"
         self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_test)
 
         ## use unsupervised reranker
         list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
-        logging.debug(str(list_q_index))
+        logging.debug("list_q_index: " + str(list_q_index))
         list_answer = self.get_answer(list_q_index)
         list_question = self.get_sentence(list_q_index)
         SessionProcesser.output_file("./out/ur_answer.txt", session_list_id, session_length, session_list_q, list_answer)
@@ -156,7 +155,7 @@ class RunModel():
         # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         ## use bert as reranker
-        from code.bert.run_classifier import run_classifier
+        from code.albert_zh.run_classifier import run_classifier
         run_classifier()
         list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
         list_answer = self.get_answer(list_q_index)
@@ -166,6 +165,16 @@ class RunModel():
         SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         return list_q_index, list_answer
+
+    def predict_single_task(self, question, k):
+        session_list_q = []
+        session_list_q.append(question)
+        list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
+        filepath_q_candidate = "./out/q_candidate_single_task.txt"
+        self.output_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
+        list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
+        list_answer = self.get_answer(list_q_index)
+        return list_answer[0]
 
     def get_answer(self, list_q_index):
         list_answer = []
@@ -213,7 +222,7 @@ class RunModel():
                 for j in range(len(list_q_candidate[i])):
                     q_index = list_q_candidate[i][j]
                     f_out.write(session_list_q[i] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
-        print("output candidate file as bert format to:", filepath)
+        logging.info("output candidate file as bert format to: " + filepath)
 
     def get_bert_q_index(self, list_q_candidate_index, k):
         x_lable = self.get_bert_result(k)
@@ -224,7 +233,7 @@ class RunModel():
 
     @classmethod
     def get_bert_result(cls, k):
-        filepath_bert_result = "./bert/out/test_results.tsv"
+        filepath_bert_result = "./code/albert_zh/out/test_results.tsv"
 
         data_result = pd.read_csv(filepath_bert_result, header = None, sep = "\t")
         x_result = np.array(data_result[1])
@@ -232,5 +241,3 @@ class RunModel():
 
         x_lable = np.argmax(x_result, axis=1)
         return x_lable
-
-# print(RunModel.get_bert_result(30))

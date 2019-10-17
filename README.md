@@ -19,6 +19,7 @@ pipreqs --encoding=utf-8 ./
 1. 0.05353: 10per tfidf 无停用词 k = 20 取中心答案
 2. 0.050728: 10per tfidf 无停用词 k = 15 取中心答案
 2. 0.035051：100per tfidf 无停用词 k = 10 取中心答案
+1. 0.026642：0.1per elmo k = 30 bert
 1. 0.021707: 10per tfidf 都用停用词 k = 15 取中心答案
 
 
@@ -58,26 +59,25 @@ Note：
 
 Note：下面的表格没有按照上述顺序。
 
-### bert embedding
-
-train size | embedding | 是否bert | k | score 
+### bert reranker topk size
+train size | embedding | reranker | k | score 
 -|-|-|-|-
-10per | bert | ur | 30 | 0.013114113960232704
-10per | bert | bert | 30 | 0.005994437205573867
-10per | bert | ur | 20 | 0.013114113960232704
-10per | bert | bert | 20 | 0.01069082542094502
-10per | bert | ur | 10 | 0.013114113960232704
-10per | bert | bert | 10 | 0.006636543409574341
+1per | elmo | ur | 50 | 
+1per | elmo | bert | 50 | 
+1per | elmo | ur | 30 | 
+1per | elmo | bert | 30 | 
+1per | elmo | ur | 20 | 
+1per | elmo | bert | 20 | 
 
 
-### bert and bert
+### bert reranker
 k=30 中心 只输入q  
-train size | embedding | 是否bert | score 
+train size | embedding | reranker | score 
 -|-|-|-
-0.1per | elmo | ur | 0.012025974229432725
-0.1per | elmo | bert | 0.006229655301173301
-1per | elmo | ur | 0.013615373535648321
-1per | elmo | bert | 0.0055121695669156446
+0.1per | elmo | ur | 0.011650419310171833
+0.1per | elmo | bert | 0.004994507214531904
+1per | elmo | ur | 0.014519681063507131
+1per | elmo | bert | 0.0047540278031258
 1per | tfidf | ur | 
 1per | tfidf | bert | 
 10per | tfidf | bert | 

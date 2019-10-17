@@ -107,7 +107,7 @@ class EmbeddingModelLoader():
         for i in range(len(list_sentence)):
             list_word_embedding = []
             sentence = list_sentence[i]
-            corpus_sentence = []
+
             for str_char in sentence:
                 try:
                     word_embedding = list(self.data_bert_embedding.iloc[self.dict_word2index[str_char]])
@@ -116,13 +116,14 @@ class EmbeddingModelLoader():
                     # logging.warning("char '" + str_char + "' is not in dict.")
                     continue
             if len(list_word_embedding) != 0:
+                corpus_sentence = []
                 vec_sentence = np.sum(list_word_embedding, axis=0) / len(list_word_embedding)
                 cnt = 0
                 for vec in vec_sentence:
                     corpus_sentence.append((cnt, vec))
                     cnt += 1
             else:
-                pass
+                corpus_sentence = []
             corpus_bert.append(corpus_sentence)
 
             if i % 1000 == 0:
@@ -254,12 +255,12 @@ class EmbeddingModelLoader():
 
     def text2corpus_elmo(self, texts):
         list_word_embedding = self.model.sents2elmo(texts)
-        list_list_vec = []
+        list_sentence_vec = []
         for sentence in list_word_embedding:
-            list_list_vec.append(np.sum(sentence, axis=0) / len(sentence))
+            list_sentence_vec.append(np.sum(sentence, axis=0) / len(sentence))
 
         corpus_text = []
-        for list_vec in list_list_vec:
+        for list_vec in list_sentence_vec:
             corpus_sentence = []
             cnt = 0
             for vec in list_vec:

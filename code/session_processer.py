@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import re
 # import sklearn
-
+import logging
 
 class SessionProcesser():
     """
@@ -67,7 +67,7 @@ class SessionProcesser():
                     f_out.write(list_a_sentence[cnt] + "\n")
                     cnt += 1
                 f_out.write("</session " + session_list_id[i] + ">\n\n")
-        print("Output result file in:", filepath_output)
+        logging.info("Output result file in: " + filepath_output)
 
 # data_loader = SessionProcesser()
 # session_list, session_length, session_text = data_loader.read_file()
