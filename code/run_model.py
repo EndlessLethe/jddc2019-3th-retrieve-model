@@ -9,6 +9,7 @@ import os
 import pickle
 from code.session_processer import SessionProcesser
 import logging
+from code.rule_based_processor import process_question_list
 
 class RunModel():
     """
@@ -129,21 +130,30 @@ class RunModel():
         return top_k
 
     def predict(self, filepath_input, filepath_result, k):
-        session_list_id, session_length, session_list_q = SessionProcesser.read_file(filepath_input, use_context=False)
+        session_list_id, session_length, session_list_q, session_list_history = SessionProcesser.read_file(filepath_input)
+
+        logging.debug("Num of sessions: " + str(len(session_list_id)))
+        logging.debug("Num of questions: " + str(len(session_list_q)))
+        logging.debug("Num of histories: " + str(len(session_list_history)))
+        logging.debug("histories: " + str(session_list_history))
 
         ## get list_q_candidate and output to examine
         list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
         logging.debug("list_q_candidate_index: " + str(list_q_candidate_index))
-
         list_a_candidate_index = self.get_list_a_candidate_index(list_q_candidate_index)
+
+        ## output history and candidate data for smn and debugging
+        # filepath_smn_predict = "./out/smn_predict.tsv"
+        # self.output_predict_file_smn(list_a_candidate_index, session_list_id, session_length,
+        #                         session_list_q, session_list_history, filepath_smn_predict)
 
         ## output candidate data for bert amd debugging
         filepath_q_candidate = "./out/q_candidate.txt"
         self.output_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
         filepath_q_candidate = "./out/a_candidate.txt"
         self.output_candidate(list_a_candidate_index, session_list_q, filepath_q_candidate)
-        filepath_bert_test = "./code/albert_zh/data/test.tsv"
-        self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_test)
+        filepath_bert_predict = "./code/bert/data/test.tsv"
+        self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
 
         ## use unsupervised reranker
         list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
@@ -152,28 +162,36 @@ class RunModel():
         list_question = self.get_sentence(list_q_index)
         SessionProcesser.output_file("./out/ur_answer.txt", session_list_id, session_length, session_list_q, list_answer)
         SessionProcesser.output_file("./out/ur_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-        # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         ## use bert as reranker
-        from code.albert_zh.run_classifier import run_classifier
-        run_classifier()
-        list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
-        list_answer = self.get_answer(list_q_index)
-        list_question = self.get_sentence(list_q_index)
-        SessionProcesser.output_file("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
-        SessionProcesser.output_file("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-        SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        # from code.bert.run_classifier import run_classifier
+        # run_classifier()
+        # list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
+        # list_answer = self.get_answer(list_q_index)
+        # list_question = self.get_sentence(list_q_index)
+        # SessionProcesser.output_file("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
+        # SessionProcesser.output_file("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
+        # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         return list_q_index, list_answer
 
     def predict_single_task(self, question, k):
         session_list_q = []
         session_list_q.append(question)
+        list_flag, list_answer = process_question_list([0], session_list_q)
+
+        if list_flag[0]:
+            logging.debug("task dialog: " + str(list_flag[0]) + list_answer[0])
+            return list_answer[0]
+
         list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
         filepath_q_candidate = "./out/q_candidate_single_task.txt"
         self.output_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
         list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
         list_answer = self.get_answer(list_q_index)
+        logging.debug("retrieved model: " + list_answer[0])
+
         return list_answer[0]
 
     def get_answer(self, list_q_index):
@@ -224,6 +242,8 @@ class RunModel():
                     f_out.write(session_list_q[i] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
         logging.info("output candidate file as bert format to: " + filepath)
 
+
+
     def get_bert_q_index(self, list_q_candidate_index, k):
         x_lable = self.get_bert_result(k)
         list_q_index = []
@@ -233,11 +253,12 @@ class RunModel():
 
     @classmethod
     def get_bert_result(cls, k):
-        filepath_bert_result = "./code/albert_zh/out/test_results.tsv"
+        filepath_bert_result = "./code/bert/out/test_results.tsv"
 
         data_result = pd.read_csv(filepath_bert_result, header = None, sep = "\t")
         x_result = np.array(data_result[1])
         x_result = x_result.reshape((int(data_result.shape[0] / k), int(k)))
 
         x_lable = np.argmax(x_result, axis=1)
+        logging.debug("bert result: " + str(x_lable))
         return x_lable

@@ -26,10 +26,11 @@ def main(filepath_quz, filepath_result):
     print(re.eval_result())
 
 def human_eval():
-    l_g.setLevel(logging.WARNING)
+    # l_g.setLevel(logging.WARNING)
+    l_g.setLevel(logging.DEBUG)
     print('=' * 50 + '请稍候...' + '=' * 50)
-    filepath_train = "data/chat_1per.txt"
-    rm = RunModel(filepath_train, 5)
+    filepath_train = "data/chat_10per.txt"
+    rm = RunModel(filepath_train, 1)
     rm.fit()
     print('=' * 48 + '模型加载完成' + '=' * 48)
     while True:
@@ -42,11 +43,12 @@ def human_eval():
             answer = rm.predict_single_task(question=question, k=30)
             print(answer)
 
-filepath_quz = "data/dev_question.txt"
-filepath_result = "out/test.txt"
-main(filepath_quz, filepath_result)
 
-# human_eval()
+# filepath_quz = "data/dev_question.txt"
+# filepath_result = "out/test.txt"
+# main(filepath_quz, filepath_result)
+
+human_eval()
 # main(sys.argv[1], sys.argv[2])
 
 

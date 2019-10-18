@@ -17,14 +17,15 @@ class SessionProcesser():
 
 
     @classmethod
-    def read_file(cls, file_path, use_context = True):
+    def read_file(cls, file_path):
         with open(file_path, "r", encoding="utf8") as f:
             session_list_id = []
             session_length = []
             session_list_q = []
+            session_list_history = []
             line = f.readline()
             ques = []
-            tlist = ""
+
             while line:
                 string = line.strip()
                 if string.startswith("<session"):
@@ -35,27 +36,58 @@ class SessionProcesser():
                         raise ValueError(string, session_list_id[-1])
                     session_length.append(len(ques))
                     for q in ques:
-                        session_list_q.append(tlist+""+q)
+                        session_list_q.append(q)
                     ques = []
-                    if use_context == False:
-                        tlist = ""
-                    else :
-                        tlist += text.replace("!@@@!", " ") + " "
+                    session_list_history.append(text.replace("!@@@!", "。"))
                     line = f.readline()
                 if string == "<context>":
+                    text = ""
+
+                    ## if flag == 1 so keep appending
+                    cnt = 0
+                    flag = 1
+                    is_q = 1
                     while True:
                         line = f.readline().strip()
                         if line.startswith("Q:") or line.startswith("A:"):
+                            if line.startswith("Q:"):
+                                if is_q == 1:
+                                    flag = 1
+                                else :
+                                    flag = 0
+                                is_q = 1
+                            elif line.startswith("A:"):
+                                if is_q == 0:
+                                    flag = 1
+                                else :
+                                    flag = 0
+                                is_q = 0
+                            else :
+                                raise Exception("Error. Wrong input file format.")
+
+
                             line = line[2:]
                             string = line.strip()
-                            text = string.split("<sep>")[0]
-                            # tlist += text.replace("!@@@!", "。") + "。"
+
+                            cnt += 1
+                            print(cnt, flag)
+                            print(text)
+
+                            if flag == 1:
+                                text += " "
+                                text += string.split("<sep>")[0]
+                            else :
+                                session_list_history.append(text.replace("!@@@!", "。"))
+                                text = ""
+                                text += string.split("<sep>")[0]
                         else:
+                            if flag == 1:
+                                session_list_history.append(text.replace("!@@@!", "。"))
                             break
                 if re.match(r"^<Q[0-9]*>(.*)</Q[0-9]*>$", string):
                     ques.append(re.match(r"^<Q[0-9]*>(.*)</Q[0-9]*>$", string)[1].replace("!@@@!", "。"))
                 line = f.readline()
-        return session_list_id, session_length, session_list_q
+        return session_list_id, session_length, session_list_q, session_list_history
 
     @classmethod
     def output_file(cls, filepath_output, session_list_id, session_length, session_list_q, list_a_sentence):
