@@ -99,10 +99,14 @@ class RunModel():
         """
         list_q_candidate_index has a shape: n_q * k * 2
             The last dim is (sentence index, similarity score)
+        So use reformat_list_q_candidate_indexto reformat.
         """
         list_q_candidate_index = []
 
+        ## use model loaded to tranform text into corpus
         corpus_vec = self.list_sentence_to_corpus(texts)
+
+        ## use sentence corpus to compute most simlilar k question
         for vec_sentence in corpus_vec:
             list_candidate = self.get_topk_answer(vec_sentence, k)
             list_q_candidate_index.append(list_candidate)

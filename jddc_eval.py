@@ -11,10 +11,10 @@ l_g = logging.getLogger()
 l_g.setLevel(logging.DEBUG)
 
 def main(filepath_quz, filepath_result):
-    filepath_train = "data/chat_10per.txt"
+    filepath_train = "data/chat_0.1per.txt"
     filepath_answer = "data/dev_answer.txt"
 
-    rm = RunModel(filepath_train, 1)
+    rm = RunModel(filepath_train, 6)
 
     rm.fit()
     rm.predict(filepath_quz, filepath_result, k = 30)
@@ -44,11 +44,11 @@ def human_eval():
             print(answer)
 
 
-# filepath_quz = "data/dev_question.txt"
-# filepath_result = "out/test.txt"
-# main(filepath_quz, filepath_result)
-
-human_eval()
+filepath_quz = "data/dev_question.txt"
+filepath_result = "out/test.txt"
+main(filepath_quz, filepath_result)
+#
+# human_eval()
 # main(sys.argv[1], sys.argv[2])
 
 

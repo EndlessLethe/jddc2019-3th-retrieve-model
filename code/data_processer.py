@@ -359,16 +359,6 @@ class DataProcesser():
         logging.info("output candidate file as bert format to:" + filepath_output)
 
 
-    def output_predict_file_smn(self, list_q_candidate, session_list_id, session_length,
-                                session_list_q, session_list_history, filepath_output):
-
-        with open(filepath_output, "w", encoding="utf-8") as f_out:
-            for i in range(len(session_list_q)):
-                for j in range(len(list_q_candidate[i])):
-                    q_index = list_q_candidate[i][j]
-                    f_out.write(session_list_q[i] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
-        logging.info("output candidate file as bert format to: " + filepath_output)
-
     @classmethod
     def get_eval_file_bert(cls):
         filepath_input = "../data/chat_100per.txt"

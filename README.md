@@ -84,6 +84,16 @@ train size | embedding | reranker | score
 10per | tfidf | ur | 
 
 
+### bert embedding
+k=30 中心 只输入q  
+train size | embedding | reranker | score 
+-|-|-|-
+0.1per | bert | ur | 0.011230678772122138
+1per | bert | ur | 0.013131209502587263
+10per | bert | ur | 0.015230553124618745
+
+
+
 ### 特殊字符
 bert k=30 全部数据  
 train size | embedding | 是否替换 | score 

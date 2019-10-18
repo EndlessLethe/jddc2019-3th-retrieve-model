@@ -18,7 +18,7 @@ class SessionProcesser():
 
     @classmethod
     def read_file(cls, file_path):
-        with open(file_path, "r", encoding="utf8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             session_list_id = []
             session_length = []
             session_list_q = []
@@ -38,13 +38,12 @@ class SessionProcesser():
                     for q in ques:
                         session_list_q.append(q)
                     ques = []
-                    session_list_history.append(text.replace("!@@@!", "。"))
+                    list_history.append(text.replace("!@@@!", "。"))
                     line = f.readline()
                 if string == "<context>":
                     text = ""
 
                     ## if flag == 1 so keep appending
-                    cnt = 0
                     flag = 1
                     is_q = 1
                     list_history = []
@@ -66,13 +65,8 @@ class SessionProcesser():
                             else :
                                 raise Exception("Error. Wrong input file format.")
 
-
                             line = line[2:]
                             string = line.strip()
-
-                            cnt += 1
-                            print(cnt, flag)
-                            print(text)
 
                             if flag == 1:
                                 text += " "
