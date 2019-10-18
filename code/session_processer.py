@@ -47,6 +47,7 @@ class SessionProcesser():
                     cnt = 0
                     flag = 1
                     is_q = 1
+                    list_history = []
                     while True:
                         line = f.readline().strip()
                         if line.startswith("Q:") or line.startswith("A:"):
@@ -77,12 +78,13 @@ class SessionProcesser():
                                 text += " "
                                 text += string.split("<sep>")[0]
                             else :
-                                session_list_history.append(text.replace("!@@@!", "。"))
+                                list_history.append(text.replace("!@@@!", "。"))
                                 text = ""
                                 text += string.split("<sep>")[0]
                         else:
                             if flag == 1:
-                                session_list_history.append(text.replace("!@@@!", "。"))
+                                list_history.append(text.replace("!@@@!", "。"))
+                            session_list_history.append(list_history)
                             break
                 if re.match(r"^<Q[0-9]*>(.*)</Q[0-9]*>$", string):
                     ques.append(re.match(r"^<Q[0-9]*>(.*)</Q[0-9]*>$", string)[1].replace("!@@@!", "。"))

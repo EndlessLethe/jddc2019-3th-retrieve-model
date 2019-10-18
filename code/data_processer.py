@@ -358,7 +358,7 @@ class DataProcesser():
             #     f_out.write(list_q[i] + "\t" + list_false_a + "\t0\n")
         logging.info("output candidate file as bert format to:" + filepath_output)
 
-    
+
     def output_predict_file_smn(self, list_q_candidate, session_list_id, session_length,
                                 session_list_q, session_list_history, filepath_output):
 
