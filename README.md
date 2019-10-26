@@ -58,11 +58,11 @@ SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch
 ## 检索式模型
 The Dialog Systems Technology Challenges 7 (DSTC7)定义了5个子问题：
 
-No. | Subtask Description
-- | -
-1  | Select the next response from a set of 100 choices that
+No | Subtask Description
+-|-
+1 | Select the next response from a set of 100 choices that
 contains 1 correct response
-2  | Select the next response from a set of 120,000 choices
+2 | Select the next response from a set of 120,000 choices
 3 | Select the next response(s) from a set of 100 choices
 that contains between 1 and 5 correct responses
 4 | Select the next response or NONE from a set of 100
