@@ -263,6 +263,7 @@ class EmbeddingModelLoader():
             for j in range(len(list_word_embedding)):
                 corpus_sentence = []
                 vec_sentence = np.sum(list_word_embedding[j], axis=0) / len(list_word_embedding[j])
+                # vec_sentence = np.sum(list_word_embedding[j], axis=0)
                 cnt = 0
                 for vec in vec_sentence:
                     corpus_sentence.append((cnt, vec))

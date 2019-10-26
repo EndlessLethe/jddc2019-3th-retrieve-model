@@ -31,6 +31,7 @@ class RunModel():
         self.dict_q_index_to_data_index = None
         self.data = self.load_data()
 
+
         ## data sent to EmbeddingModelLoader is only questions.
         self.list_is_picked = self.get_dict_q_index_to_data_index()
 
@@ -177,10 +178,26 @@ class RunModel():
         # SessionProcesser.output_file("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
         # SessionProcesser.output_file("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
         # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        #
+        # ## use task dialog to provide standar answer for matched questions
+        # list_sessoin_id = []
+        # for i in range(len(session_list_id)):
+        #     for j in range(session_length[i]):
+        #         list_sessoin_id.append(session_list_id[i])
+        # list_flag, list_answer_task = process_question_list(list_sessoin_id, session_list_q)
+        # logging.debug("Task Dialog Len: " + str(len(list_flag)) + " " + str(len(list_answer_task)))
+        # list_answer_multi = []
+        # for i in range(len(session_list_q)):
+        #     if list_flag[i]:
+        #         list_answer_multi.append(list_answer_task[i])
+        #     else:
+        #         list_answer_multi.append(list_answer[i])
+        # SessionProcesser.output_file("./out/task_answer.txt", session_list_id, session_length, session_list_q, list_flag)
+        # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer_multi)
 
         return list_q_index, list_answer
 
-    def predict_single_task(self, question, k):
+    def predict_single_task(self, question, k, predict_input_fn, estimator):
         session_list_q = []
         session_list_q.append(question)
         list_flag, list_answer = process_question_list([0], session_list_q)
@@ -190,11 +207,23 @@ class RunModel():
             return list_answer[0]
 
         list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
+        list_a_candidate_index = self.get_list_a_candidate_index(list_q_candidate_index)
+
         filepath_q_candidate = "./out/q_candidate_single_task.txt"
         self.output_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
+
+        filepath_bert_predict = "./code/bert/data/test.tsv"
+        self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
+        import code
+
         list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
         list_answer = self.get_answer(list_q_index)
-        logging.debug("retrieved model: " + list_answer[0])
+        # print("retrieved model with unsupervised reranker: " + list_answer[0])
+
+        code.bert.run_classifier.predict(predict_input_fn, estimator)
+        list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
+        list_answer = self.get_answer(list_q_index)
+        # print("retrieved model with bert: " + list_answer[0])
 
         return list_answer[0]
 

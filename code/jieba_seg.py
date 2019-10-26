@@ -1,4 +1,5 @@
 import jieba
+import logging
 
 class JiebaSeg() :
     def __init__(self, filepath_stopwords = "./data/stoplist.txt"):
@@ -6,6 +7,7 @@ class JiebaSeg() :
 
 
     def cut(self, sentence, stopwords = False):
+        jieba.setLogLevel(logging.INFO)
         seg_list = jieba.cut(sentence)  # 切词
 
         if stopwords:

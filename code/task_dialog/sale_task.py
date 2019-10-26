@@ -9,6 +9,15 @@ def intent_update(msg,dialog_status):
     return dialog_status
 
 
+# class DialogStatus(object):
+    
+#     def __init__(self):
+#         self.intent = None
+#         self.ware_id = None
+#         self.order_id = None
+#         self.sale_return_intent = None
+
+
 def sale_return(sentence,dialog_status):
 #     """
 #     sentence:

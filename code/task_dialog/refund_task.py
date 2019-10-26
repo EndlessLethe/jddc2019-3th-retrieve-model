@@ -1,7 +1,7 @@
 import re
 
 def intent_update(msg,dialog_status):    
-    sign = "(?=.*[钱款])(?=.*退)|[差保降]价|价保"
+    sign = "(?=.*退[钱款])|[差保降]价|价保"
     if re.search(sign,msg):
         dialog_status.intent = "refund"
 
@@ -15,7 +15,7 @@ def refund_response(sentence,dialog_status):
     if re.search("不",sentence):
         if not re.search("不要|不对|可不可以|可以不可以",sentence):return None
     
-    sign = "(?=.*[钱款])(?=.*退)|[差保降]价|价保"
+    sign = "(?=.*退[钱款])|[差保降]价|价保"
 #     
     if True:
         if not re.search(sign, sentence):
@@ -34,9 +34,6 @@ def refund_response(sentence,dialog_status):
         
         if re.search("审核",sentence):
             return "您好,请您耐心等候，商家审核通过后，退款会退还到您原支付账户的"
-        
-        if re.search("重新拍|重新下单|重新下了单|再下单|重新买|再买",sentence):
-            return "好的,先给您退了,然后您在重新购买就可以啦"
         
         if re.search(r"取消退款|取消申请|取消申请|撤销申请", sentence):
             return "订单一旦取消无法恢复的呢，系统正在拦截的呢，如果拦截未成功，会继续配送，后期配送到了您可以签收的呢"
@@ -79,7 +76,10 @@ def refund_response(sentence,dialog_status):
             
         if re.search("怎么|帮.*退[钱款]|如何|要退[款钱]|想退[款钱]|退[款钱]吧|申请退[款钱]|要求退[款钱]|需要退[款钱]|处理.*退[款钱]",sentence):
             if order_id:return "您好，请问是{}这个订单号的物品吗？如果是的话，小妹这边帮您提交申请".format(order_id)
-            return "麻烦您提供一下您的订单号，小妹这边会帮您提交退货申请"
+            return "麻烦您提供一下您的订单号，小妹这边会帮您提交退货申请, 审核退货成功后五个工作日后退款会原卡返回"
+
+        if re.search("重新拍|重新下单|重新下了单|再下单|重新买|再买",sentence):
+            return "好的,先给您退了,然后您在重新购买就可以啦"
 
         if order_id:return "您好，订单号{}的退款申请已经提交，财务正在进行退款审核，退款是[数字x][数字x]个工作日退还到您原支付账户的，请您耐心等待".format(order_id)
     

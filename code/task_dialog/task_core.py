@@ -17,20 +17,22 @@ from code.task_dialog import general_task
 from code.task_dialog import short_query_task
 from code.task_dialog import finish_task
 from code.task_dialog.tools import log_print
+from code.task_dialog import present_task
 
 
 class TaskCore(object):
     intent_update_func = [
         ("start", "start_task.intent_update"),
-        ("unbind", "unbind_task.intent_update"),
+        #("unbind", "unbind_task.intent_update"),
         ("price_protect", "price_protect_task.intent_update"),
         ("invoice", "invoice_task.intent_update"),
+        ("order_related", "order_related_task.intent_update"),
         ("sale_return", "sale_task.intent_update"),
         ("sale_after", "sale_after_task.intent_update"),
+        ("present", "present_task.intent_update"),
         ("refund", "refund_task.intent_update"),
         ("order_modify", "order_modify.intent_update"),
         ("query", "query_task.intent_update"),
-        ("order_related", "order_related_task.intent_update"),
         ("delivery", "delivery_task.intent_update"),
         ("general", "general_task.intent_update"),
         ("finish", "finish_task.intent_update"),
@@ -41,15 +43,16 @@ class TaskCore(object):
 
     intent_handle_func = {
         "start": "start_task.start_handle",  # 用户对话开启
-        "unbind": "unbind_task.unbind_handle",  # 解绑相关
+        #"unbind": "unbind_task.unbind_handle",  # 解绑相关
         "price_protect": "price_protect_task.price_protect_handle",  # 价格保护
         "invoice": "invoice_task.invoice_handle",  # 发票
+        "order_related": "order_related_task.order_related",  # 客服订单相关回复
         "sale_return": "sale_task.sale_return",  # 退货
         "sale_after": "sale_after_task.sale_after",  # 换货
+        "present": "present_task.present_handle", #赠品
         "refund": "refund_task.refund_response",  # 退款
         "order_modify": "order_modify.order_modify_handle",  # 订单修改
         "query": "query_task.query_judge",  # 查询询问
-        "order_related": "order_related_task.order_related",  # 客服订单相关回复
         "delivery": "delivery_task.delivery",  # 客服物流快递配送相关回复
         "general": "general_task.general_handle",  # 常见问题回复
         "finish": "finish_task.finish_handle",  # 用户对话结束

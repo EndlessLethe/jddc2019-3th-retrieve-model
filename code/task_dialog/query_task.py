@@ -12,6 +12,17 @@ def intent_update(msg,dialog_status):
     return dialog_status
 
 
+# class DialogStatus(object):
+    
+#     def __init__(self):
+#         self.intent = None
+#         self.ware_id = None
+#         self.order_id = None
+        
+#         self.sale_return_intent = None
+#         self.query_intent = None
+
+
 def query_judge(sentence,dialog_status):
     if "不" in sentence:
         return None
@@ -30,6 +41,7 @@ def query_judge(sentence,dialog_status):
             if re.search("取消",sentence):
                 if research("怎么|如何",sentence):return "登陆京东app客户端，点击页面右下方【我的】，进入【我的订单】页面查看即可" 
                 return "您好，如果您需要取消，小妹这边可以帮您提交申请的哦"
+            #return "您好，有什么我可以帮您处理或解决呢"
         
         if re.search("订单号|ORDERID_DIGIT|商品",sentence):
             if re.search("改",sentence):return  "您好，请问您有什么需要修改的呢"

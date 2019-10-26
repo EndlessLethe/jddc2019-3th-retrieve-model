@@ -45,7 +45,7 @@ def sale_after(sentence,dialog_status):
         
         if re.search("运费|邮费|快递费",sentence):return "您好，因非商品质量问题由客户发起的换货行为，将由客户承担返回京东的运费。"
         
-        return "您好，目前针对换货，只支持换同个商品编号的同款商品，暂不支持更换其它商品。"
+        return "嗯嗯，可以的哈，商品不影响二次销售是支持七天无理由退换货的"
     
     
     return None
