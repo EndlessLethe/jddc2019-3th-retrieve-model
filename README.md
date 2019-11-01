@@ -60,14 +60,14 @@ The Dialog Systems Technology Challenges 7 (DSTC7)定义了5个子问题：
 
 No. | Subtask Description
 - | -
-1  | Select the next response from a set of 100 choices that
+1| Select the next response from a set of 100 choices that
 contains 1 correct response
-2  | Select the next response from a set of 120,000 choices
-3 | Select the next response(s) from a set of 100 choices
+2| Select the next response from a set of 120,000 choices
+3| Select the next response(s) from a set of 100 choices
 that contains between 1 and 5 correct responses
-4 | Select the next response or NONE from a set of 100
+4| Select the next response or NONE from a set of 100
 choices that contains 0 or 1 correct response
-5 | Select the next response from a set of 100 choices, given
+5| Select the next response from a set of 100 choices, given
 access to an external dataset
 
 对于本次大赛的检索式的对话模型，我们重点关注问题1和2——如何从大量对话数据中选取top k的少量候选数据？以及如何使用更加精准的重排（rerank）模型，从候选数据中选取最为匹配的答案。

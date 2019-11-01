@@ -96,13 +96,17 @@ class RunModel():
         return self.dict_q_index_to_data_index[q_index]
 
 
-    def get_list_q_candidate_index(self, texts, k):
+    def get_list_q_candidate_index(self, session_list_q, k):
         """
         list_q_candidate_index has a shape: n_q * k * 2
             The last dim is (sentence index, similarity score)
         So use reformat_list_q_candidate_indexto reformat.
         """
         list_q_candidate_index = []
+        texts = []
+        for i in range(len(session_list_q)):
+            for j in range(len(session_list_q[i])):
+                texts.append(session_list_q[i][j])
 
         ## use model loaded to tranform text into corpus
         corpus_vec = self.list_sentence_to_corpus(texts)
@@ -158,27 +162,28 @@ class RunModel():
         filepath_q_candidate = "./out/a_candidate.txt"
         self.output_candidate(list_a_candidate_index, session_list_q, filepath_q_candidate)
         filepath_bert_predict = "./code/bert/data/test.tsv"
-        self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
+        # self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
+        self.output_candidate_with_history(list_a_candidate_index, session_list_q, session_list_history, filepath_bert_predict)
 
         ## use unsupervised reranker
         list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
         logging.debug("list_q_index: " + str(list_q_index))
         list_answer = self.get_answer(list_q_index)
         list_question = self.get_sentence(list_q_index)
-        SessionProcesser.output_file("./out/ur_answer.txt", session_list_id, session_length, session_list_q, list_answer)
-        SessionProcesser.output_file("./out/ur_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-        SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        SessionProcesser.output_result_file_without_history("./out/ur_answer.txt", session_list_id, session_length, session_list_q, list_answer)
+        SessionProcesser.output_result_file_without_history("./out/ur_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
+        SessionProcesser.output_result_file_without_history(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         ## use bert as reranker
-        # from code.bert.run_classifier import run_classifier
-        # run_classifier()
-        # list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
-        # list_answer = self.get_answer(list_q_index)
-        # list_question = self.get_sentence(list_q_index)
-        # SessionProcesser.output_file("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
-        # SessionProcesser.output_file("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-        # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
-        #
+        from code.bert.run_classifier import run_classifier
+        run_classifier()
+        list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
+        list_answer = self.get_answer(list_q_index)
+        list_question = self.get_sentence(list_q_index)
+        SessionProcesser.output_result_file_without_history("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
+        SessionProcesser.output_result_file_without_history("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
+        SessionProcesser.output_result_file_without_history(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+
         # ## use task dialog to provide standar answer for matched questions
         # list_sessoin_id = []
         # for i in range(len(session_list_id)):
@@ -192,8 +197,8 @@ class RunModel():
         #         list_answer_multi.append(list_answer_task[i])
         #     else:
         #         list_answer_multi.append(list_answer[i])
-        # SessionProcesser.output_file("./out/task_answer.txt", session_list_id, session_length, session_list_q, list_flag)
-        # SessionProcesser.output_file(filepath_result, session_list_id, session_length, session_list_q, list_answer_multi)
+        # SessionProcesser.output_result_file_without_history("./out/task_answer.txt", session_list_id, session_length, session_list_q, list_flag)
+        # SessionProcesser.output_result_file_without_history(filepath_result, session_list_id, session_length, session_list_q, list_answer_multi)
 
         return list_q_index, list_answer
 
@@ -269,13 +274,38 @@ class RunModel():
 
     def output_candidate(self, list_q_candidate, session_list_q, filepath):
         with open(filepath, "w", encoding="utf-8") as f_out:
+            # cnt = 0
             for i in range(len(session_list_q)):
-                for j in range(len(list_q_candidate[i])):
-                    q_index = list_q_candidate[i][j]
-                    f_out.write(session_list_q[i] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
+                for k in range(len(session_list_q[i])):
+                    for j in range(len(list_q_candidate[i])):
+                        q_index = list_q_candidate[i][j]
+                        f_out.write(session_list_q[i][k] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
+                        # cnt += 1
         logging.info("output candidate file as bert format to: " + filepath)
 
-
+    def output_candidate_with_history(self, list_q_candidate, session_list_q, session_list_history, filepath):
+        with open(filepath, "w", encoding="utf-8") as f_out:
+            for i in range(len(session_list_q)):
+                logging.debug(str(session_list_history[i]))
+                if len(session_list_history[i]) < 6:
+                    continue
+                assert len(session_list_history[i]) == 6
+                list_his = []
+                list_his.append(session_list_history[i][0])
+                list_his.append(session_list_history[i][2])
+                list_his.append(session_list_history[i][4])
+                list_his.extend(session_list_q[i])
+                logging.debug(str(list_his))
+                for k in range(len(session_list_q[i])):
+                    for j in range(len(list_q_candidate[i])):
+                        h1 = list_his[k+1]
+                        h2 = list_his[k+2]
+                        h3 = list_his[k+3]
+                        # logging.debug("h3" + h3 + " " + session_list_q[i][k])
+                        assert h3 == session_list_q[i][k]
+                        q_index = list_q_candidate[i][j]
+                        f_out.write(h1 + "\t" + h2 + "\t" + h3 + "\t" + self.data.iat[q_index, 0] + "\t0\n")
+        logging.info("output candidate file as bert format to: " + filepath)
 
     def get_bert_q_index(self, list_q_candidate_index, k):
         x_lable = self.get_bert_result(k)

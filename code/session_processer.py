@@ -35,8 +35,7 @@ class SessionProcesser():
                     if session_list_id[-1]!=string[10:-1]:
                         raise ValueError(string, session_list_id[-1])
                     session_length.append(len(ques))
-                    for q in ques:
-                        session_list_q.append(q)
+                    session_list_q.append(ques)
                     ques = []
                     list_history.append(text.replace("!@@@!", "。"))
                     line = f.readline()
@@ -86,7 +85,7 @@ class SessionProcesser():
         return session_list_id, session_length, session_list_q, session_list_history
 
     @classmethod
-    def output_file(cls, filepath_output, session_list_id, session_length, session_list_q, list_a_sentence):
+    def output_result_file_without_history(cls, filepath_output, session_list_id, session_length, session_list_q, list_a_sentence):
         with open(filepath_output, "w", encoding='utf-8') as f_out:
             cnt = 0
             for i in range(len(session_list_id)):
@@ -96,6 +95,8 @@ class SessionProcesser():
                     cnt += 1
                 f_out.write("</session " + session_list_id[i] + ">\n\n")
         logging.info("Output result file in: " + filepath_output)
+
+
 
 # data_loader = SessionProcesser()
 # session_list, session_length, session_text = data_loader.read_file()

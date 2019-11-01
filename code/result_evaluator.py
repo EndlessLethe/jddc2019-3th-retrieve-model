@@ -36,14 +36,18 @@ class ResultEvaluator():
         # seg_jieba = JiebaSeg()
 
         smooth = SmoothingFunction()
+
+
         for i in range(len(list_predict)):
+            list_answer_three = list_answer[i].split("<sep>")
+
             ## 去掉标点符号
             ## 实验表明sentence_bleu会自己去掉符号
             # sentence_predict = re.sub(r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+", " ", list_predict[i])
             # sentence_answer = re.sub(r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+", " ", list_answer[i])
 
             ## bleu就计算字的ngram即可
-            n_eval = sentence_bleu([list_answer[i]], list_predict[i], smoothing_function=smooth.method1)
+            n_eval = sentence_bleu(list_answer_three, list_predict[i], smoothing_function=smooth.method1)
             # n_eval = sentence_bleu([seg_jieba.cut(sentence_answer)], seg_jieba.cut(sentence_predict), smoothing_function=smooth.method1)
             n_sum +=  n_eval
             # print(n_eval, list_answer[i], list_predict[i])
