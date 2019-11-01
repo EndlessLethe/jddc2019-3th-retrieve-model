@@ -58,17 +58,13 @@ SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch
 ## 检索式模型
 The Dialog Systems Technology Challenges 7 (DSTC7)定义了5个子问题：
 
-No. | Subtask Description
-- | -
-1| Select the next response from a set of 100 choices that
-contains 1 correct response
-2| Select the next response from a set of 120,000 choices
-3| Select the next response(s) from a set of 100 choices
-that contains between 1 and 5 correct responses
-4| Select the next response or NONE from a set of 100
-choices that contains 0 or 1 correct response
-5| Select the next response from a set of 100 choices, given
-access to an external dataset
+No | Subtask Description
+-|-
+1 | Select the next response from a set of 100 choices that contains 1 correct response
+2 | Select the next response from a set of 120,000 choices
+3 | Select the next response(s) from a set of 100 choices that contains between 1 and 5 correct responses
+4| Select the next response or NONE from a set of 100 choices that contains 0 or 1 correct response
+5| Select the next response from a set of 100 choices, given access to an external dataset
 
 对于本次大赛的检索式的对话模型，我们重点关注问题1和2——如何从大量对话数据中选取top k的少量候选数据？以及如何使用更加精准的重排（rerank）模型，从候选数据中选取最为匹配的答案。
 因此我们的检索式模型分为两大部分——粗筛模块和重排模块。
@@ -122,6 +118,10 @@ access to an external dataset
 1. 中心选取的方法是假设top k答案大多数都是比较匹配的回答，在top k中选取和所有答案相似度最高的、共性最强的
 2. SMN虽然能够对历史信息进行建模，但是模型设计以现在的眼光来看比较粗糙，提取能力不强
 3. bert作为当下最流行的模型，通过海量预训练数据，有着强大的语言理解能力。通过全量对话数据的fine tuning，能够有效结合历史信息和当前问题。
+
+--------------------------------------------
+
+以下是比赛中调参记录：
 
 ## score in test set
 在整个实验过程中，我们依次确定了一下参数：
