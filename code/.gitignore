@@ -9,3 +9,5 @@ JDDC_TFIDF*
 /bert
 /SMN_Pytorch
 /albert_zh
+/task_dialog
+rule_based_processor.py

@@ -12,7 +12,7 @@ l_g = logging.getLogger()
 l_g.setLevel(logging.DEBUG)
 
 def main(filepath_quz, filepath_result):
-    filepath_train = "data/chat_1per.txt"
+    filepath_train = "data/chat_0.1per.txt"
     filepath_answer = "data/dev_answer.txt"
 
     rm = RunModel(filepath_train, 1)
@@ -29,6 +29,8 @@ def main(filepath_quz, filepath_result):
     re = ResultEvaluator(filepath_result, filepath_answer)
     print(re.eval_result())
 
+
+## This function is unavailable because of the lack of other model part, as generate model or rule_based model.
 def human_eval():
     print('=' * 50 + '请稍候...加载模型中' + '=' * 50)
     import tensorflow
