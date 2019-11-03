@@ -37,7 +37,7 @@ flags.DEFINE_string(
     "for the task.")
 
 flags.DEFINE_string(
-    "bert_config_file", "./code/bert/data/bert_config.json",
+    "bert_config_file", "./code/bert/JDAI-BERT/bert_config.json",
     "The config json file corresponding to the pre-trained BERT model. "
     "This specifies the model architecture.")
 
@@ -1023,10 +1023,10 @@ def run_classifier():
     flags_parser = flags.FLAGS([_sys.argv[0]], known_only=True)
     bert_main(flags_parser)
 
-if __name__ == "__main__":
-  flags.mark_flag_as_required("data_dir")
-  flags.mark_flag_as_required("task_name")
-  flags.mark_flag_as_required("vocab_file")
-  flags.mark_flag_as_required("bert_config_file")
-  flags.mark_flag_as_required("output_dir")
-  tf.app.run(bert_main)
+# if __name__ == "__main__":
+#   flags.mark_flag_as_required("data_dir")
+#   flags.mark_flag_as_required("task_name")
+#   flags.mark_flag_as_required("vocab_file")
+#   flags.mark_flag_as_required("bert_config_file")
+#   flags.mark_flag_as_required("output_dir")
+#   tf.app.run(bert_main)

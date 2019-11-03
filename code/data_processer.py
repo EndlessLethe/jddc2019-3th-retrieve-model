@@ -2,11 +2,11 @@ import pandas as pd
 import os
 import re
 import numpy as np
-from data_analyzer import DataAnalyzer
+from code.data_analyzer import DataAnalyzer
 import random
-from unsupervised_reranker import UnsupervisedReranker
+
 import logging
-from session_processer import SessionProcesser
+
 
 l_g = logging.getLogger()
 l_g.setLevel(logging.DEBUG)
@@ -27,8 +27,8 @@ class DataProcesser():
         is_bad_line()
         replace_special_field_v1()
     """
-    def __init__(self, n_col = 0, col_index = 0, filepath_origin ="../data/chat.txt", filepath_fundamental ="../data/chat_fundamental.txt",
-                 filepath_output_primary ="../data/chat_primary.txt", filepath_output_reformated = None):
+    def __init__(self, n_col = 0, col_index = 0, filepath_origin ="./data/chat.txt", filepath_fundamental ="./data/chat_fundamental.txt",
+                 filepath_output_primary ="./data/chat_primary.txt", filepath_output_reformated = None):
         """
         Args:
             n_col : total number of columns.
@@ -237,6 +237,7 @@ class DataProcesser():
         3. drop lines with empty text
         4. drop lines whose length is more than 100
         """
+
         import random
         print("start reformating.")
         try :
@@ -260,7 +261,7 @@ class DataProcesser():
         if self.filepath_output_reformated != None:
             filepath_output = self.filepath_output_reformated
         else :
-            filepath_output = "../data/chat_" + str(k_per) + "per.txt"
+            filepath_output = "./data/chat_" + str(k_per) + "per.txt"
 
         with open(filepath_output, "w", encoding='UTF-8') as f_out:
             for i in range(cnt_session + 1):
@@ -313,15 +314,15 @@ class DataProcesser():
 
 
     @classmethod
-    def get_train_file_bert(cls):
+    def generate_train_file_bert_single(cls):
         """
         The format that bert needs is "q a label"
         """
-        filepath_input = "../data/chat_100per.txt"
+        filepath_input = "./data/chat_100per.txt"
         data_total = pd.read_csv(filepath_input, sep = "\t")
         logging.info("Total data size: " + str(data_total.shape[0]))
 
-        filepath_output = "./bert/data/train.tsv"
+        filepath_output = "./code/bert/data/train.tsv"
         with open(filepath_output, "w", encoding="utf-8") as f_out:
             for i in range(data_total.shape[0]):
                 if i == data_total.shape[0]-1:
@@ -338,13 +339,6 @@ class DataProcesser():
                         while data_total.iat[index_false_a, 2] != 1:
                             index_false_a += 1
 
-                        ur = UnsupervisedReranker()
-                        sim_score = ur.cos_dist(data_total.iat[i+1, 6], data_total.iat[index_false_a, 6])
-                        if sim_score < 0.3:
-                            # logging.debug("Similarity: " + str(sim_score))
-                            # logging.debug(data_total.iat[i+1, 6])
-                            # logging.debug(data_total.iat[index_false_a, 6])
-                            flag = False
                     false_a = data_total.iat[index_false_a, 6]
                     f_out.write(q + "\t" + false_a + "\t0\n")
                 if i % 10000 == 0:
@@ -359,57 +353,15 @@ class DataProcesser():
         logging.info("output candidate file as bert format to:" + filepath_output)
 
 
-    @classmethod
-    def get_eval_file_bert(cls):
-        filepath_input = "../data/chat_100per.txt"
-        data_total = pd.read_csv(filepath_input, sep="\t")
-        logging.info("Total data size: " + str(data_total.shape[0]))
 
-        filepath_output = "./bert/data/dev.tsv"
-        with open(filepath_output, "w", encoding="utf-8") as f_out:
-            ## negative sampling
-            for i in range(data_total.shape[0]):
-                if i == data_total.shape[0] - 1:
-                    break
-
-                if data_total.iat[i, 2] == 0 and data_total.iat[i + 1, 2] == 1 and \
-                        data_total.iat[i, 0] == data_total.iat[i + 1, 0]:
-                    if random.uniform(0, 1) > 0.00003:
-                        continue
-
-                    q = data_total.iat[i, 6]
-
-                    flag = True
-                    while flag:
-                        index_false_a = random.randint(0, data_total.shape[0] - 5)
-                        while data_total.iat[index_false_a, 2] != 1:
-                            index_false_a += 1
-
-                        ur = UnsupervisedReranker()
-                        sim_score = ur.cos_dist(data_total.iat[i + 1, 6], data_total.iat[index_false_a, 6])
-                        if sim_score < 0.3:
-                            # logging.debug("Similarity: " + str(sim_score))
-                            # logging.debug(data_total.iat[i+1, 6])
-                            # logging.debug(data_total.iat[index_false_a, 6])
-                            flag = False
-                    false_a = data_total.iat[index_false_a, 6]
-                    f_out.write(q + "\t" + false_a + "\t0\n")
-
-            # logging.info("Generating Positive samples: " + str(len(list_true_a)))
-            # logging.info("Generating Negetive samples: " + str(len(list_false_a)))
-
-            # for i in range(len(list_q)):
-            #     f_out.write(list_q[i] + "\t" + list_true_a + "\t1\n")
-            #     f_out.write(list_q[i] + "\t" + list_false_a + "\t0\n")
-        logging.info("output eval file as bert format to:" + filepath_output)
 
 # dp = DataProcesser(7, 7)
 # dp.get_file_primary([0, 1, 2, 3, 4], is_replace= False)
 #
-# ## adjust this function arg "k_per" to select k percentage data
+# # ## adjust this function arg "k_per" to select k percentage data
 # dp.get_file_middle(5)
+#
+# ## get bert train file
+# DataProcesser.generate_train_file_bert_single()
 
-## get bert train file
-# DataProcesser.get_train_file_bert()
 
-DataProcesser.get_eval_file_bert()

@@ -24,7 +24,7 @@ class EmbeddingModelLoader():
         self.model = None
         self.index = None
         self.seg_jieba = JiebaSeg()
-        self.data_bert_embedding = None
+        self.data_skipgram_embedding = None
         self.dict_word2index = None
 
         filepath_index =  "out/" + str(self.model_index) + " " + input_name + ".index"
@@ -47,7 +47,7 @@ class EmbeddingModelLoader():
             elif self.model_index == 5:
                 corpus_embedding = self.elmo_fit_large(data)
             elif self.model_index == 6:
-                corpus_embedding = self.bert_fit(data)
+                corpus_embedding = self.skipgram_fit(data)
 
             # logging.debug("Creating index.")
             self.index = self.get_index(filepath_index, corpus_embedding, num_topics)
@@ -57,7 +57,7 @@ class EmbeddingModelLoader():
         # logging.debug("Loading existing model.")
         self.index = similarities.Similarity.load(filepath_index)
         if self.model_index == 6:
-            self.use_bert_embedding()
+            self.use_skipgram_embedding()
             return
 
         with open(filepath_dict, 'rb') as f:
@@ -92,20 +92,20 @@ class EmbeddingModelLoader():
                 self.tfidf_model.save(filepath_tfidf_model)
 
 
-    def bert_fit(self, data):
-        self.use_bert_embedding()
-        corpus_bert = self.data2corpus_bert(data)
-        return corpus_bert
+    def skipgram_fit(self, data):
+        self.use_skipgram_embedding()
+        corpus_skipgram = self.data2corpus_skipgram(data)
+        return corpus_skipgram
 
-    def data2corpus_bert(self, data):
+    def data2corpus_skipgram(self, data):
         data.columns = [0]
-        corpus_bert = self.list_sentence_to_corpus_bert(data[0].values)
-        return corpus_bert
+        corpus_skipgram = self.list_sentence_to_corpus_skipgram(data[0].values)
+        return corpus_skipgram
 
-    def list_sentence_to_corpus_bert(self, list_sentence):
+    def list_sentence_to_corpus_skipgram(self, list_sentence):
         logging.debug("dict_word2index is initialed properly: " + str(len(self.dict_word2index)))
 
-        corpus_bert = []
+        corpus_skipgram = []
         cnt_empty = 0
         cnt_not_found = 0
 
@@ -126,7 +126,7 @@ class EmbeddingModelLoader():
                     # logging.debug("char '" + char_str + "' is not in dict.")
                     continue
 
-                word_embedding = list(self.data_bert_embedding.iloc[index])
+                word_embedding = list(self.data_skipgram_embedding.iloc[index])
                 list_word_embedding.append(word_embedding)
 
             if len(list_word_embedding) != 0:
@@ -139,30 +139,30 @@ class EmbeddingModelLoader():
             else:
                 cnt_empty += 1
                 corpus_sentence = []
-            corpus_bert.append(corpus_sentence)
+            corpus_skipgram.append(corpus_sentence)
 
             if i % 1000 == 0 and i != 0:
                 logging.info("Finished {0} sentences.".format(i))
 
-        logging.debug("corpus_bert size: " + str(len(corpus_bert)))
-        logging.debug("the first element in corpus_bert: " + str(corpus_bert[0]))
-        logging.debug("cnt_empty in corpus_bert: " + str(cnt_empty))
-        logging.debug("cnt_not_found in corpus_bert: " + str(cnt_not_found))
+        logging.debug("corpus_skipgram size: " + str(len(corpus_skipgram)))
+        logging.debug("the first element in corpus_skipgram: " + str(corpus_skipgram[0]))
+        logging.debug("cnt_empty in corpus_skipgram: " + str(cnt_empty))
+        logging.debug("cnt_not_found in corpus_skipgram: " + str(cnt_not_found))
 
-        return corpus_bert
+        return corpus_skipgram
 
-    def use_bert_embedding(self):
-        logging.info("Loading bert embedding. Wait a moment.")
-        filepath_bert_data = "./code/bert/JDAI-WORD-EMBEDDING/JDAI-Word-Embedding.txt"
-        data_bert = pd.read_csv(filepath_bert_data, sep = " ", skiprows = 1, header = None)
-        data_bert.pop(301)
-        data_word = data_bert.pop(0)
-        logging.debug("bert embedding shape: " + str(data_bert.shape))
+    def use_skipgram_embedding(self):
+        logging.info("Loading skipgram embedding. Wait a moment.")
+        filepath_skipgram_data = "./code/JDAI-WORD-EMBEDDING/JDAI-Word-Embedding.txt"
+        data_skipgram = pd.read_csv(filepath_skipgram_data, sep = " ", skiprows = 1, header = None)
+        data_skipgram.pop(301)
+        data_word = data_skipgram.pop(0)
+        logging.debug("skipgram embedding shape: " + str(data_skipgram.shape))
         dict_word2index = {}
         for i in range(data_word.shape[0]):
             dict_word2index[data_word[i]] = i
         self.dict_word2index = dict_word2index
-        self.data_bert_embedding = data_bert
+        self.data_skipgram_embedding = data_skipgram
 
     def get_index(self, filepath_index, corpus_embedding, num_topics = None):
         filepath_index += ".tmp"

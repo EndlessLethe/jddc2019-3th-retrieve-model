@@ -85,7 +85,7 @@ class SessionProcesser():
         return session_list_id, session_length, session_list_q, session_list_history
 
     @classmethod
-    def output_result_file_without_history(cls, filepath_output, session_list_id, session_length, session_list_q, list_a_sentence):
+    def output_result_file(cls, filepath_output, session_list_id, session_length, session_list_q, list_a_sentence):
         with open(filepath_output, "w", encoding='utf-8') as f_out:
             cnt = 0
             for i in range(len(session_list_id)):

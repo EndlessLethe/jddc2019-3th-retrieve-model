@@ -7,6 +7,7 @@ import sys
 from code.run_model import RunModel
 from code.result_evaluator import ResultEvaluator
 import logging
+from code.data_processer import DataProcesser
 
 l_g = logging.getLogger()
 l_g.setLevel(logging.DEBUG)
@@ -15,7 +16,18 @@ def main(filepath_quz, filepath_result):
     filepath_train = "data/chat_0.1per.txt"
     filepath_answer = "data/dev_answer.txt"
 
-    rm = RunModel(filepath_train, 1)
+    if not os.path.exists(filepath_train):
+        dp = DataProcesser(7, 7)
+        dp.get_file_primary([0, 1, 2, 3, 4], is_replace=False)
+
+        ## adjust this function arg "k_per" to select k percentage data
+        k = float(filepath_train.split("/")[-1].strip("chat_").strip("per.txt"))
+        dp.get_file_middle(k)
+
+        ## get bert train file
+        # DataProcesser.generate_train_file_bert_single()
+
+    rm = RunModel(filepath_train, 1, True, False)
 
     rm.fit()
     rm.predict(filepath_quz, filepath_result, k = 30)

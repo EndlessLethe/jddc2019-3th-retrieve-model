@@ -1,13 +1,45 @@
 # README
 
 ## 前言
-很高兴我和小伙伴“网数ICT小分队”在JDDC 2019获得并列亚军（第三名）。 这是由我负责的检索模型部分。  
+很高兴我和小伙伴“网数ICT小分队”在JDDC 2019获得并列亚军（第三名）。 这里展示的是由我编写的检索模型部分和数据流框架部分。  
 
 现在回过来看这个检索模型，在学习了决赛中各个队伍的优秀解决方案后，我觉得还有很多可以改进的地方，也有前沿的方法可以引入。  
 但是随着比赛的结束，我可能也没有时间继续完善和实验更多的方法了，只能在这里提供一个粗糙的模型和框架，供大家参考。
 
+这里提供的代码不仅包含单纯的检索模型，还有数据流框架部分，可以直接运行。  
+具体有数据分析（dataeda.ipynb）、数据预处理（data_processer.py）、数据读入（session_processer.py）和数据评估（result_evaluator.py）等完整模块。欢迎大家试用和提供进一步完善的宝贵意见。
 
-## 目录结构：
+## How to use
+将京东提供的"chat.txt"，"dev_answer.txt"和"dev_question.txt"放置在"data"文件夹下即可。
+
+在控制台中直接输入`python jddc_eval.py`即可运行。
+
+### 如何指定使用的模型
+在"jddc_eval.py"文件main函数中修改`rm = RunModel(filepath_train, 1, True)`一行：
+
+- 通过embedding_model_index便可以使用不同embedding模型。
+- 通过use_bert设置在rerank模块是否使用bert，默认使用无监督的中心重排
+
+具体embedding_model_index如下：
+```
+if self.model_index == 1:
+	corpus_embedding = self.tfidf_fit(data)
+elif self.model_index == 3:
+	corpus_embedding = self.lsi_fit(data, num_topics)
+elif self.model_index == 5:
+	corpus_embedding = self.elmo_fit_large(data)
+elif self.model_index == 6:
+	corpus_embedding = self.skipgram_fit(data)
+```
+
+### 我想做更多的EDA 探索性数据分析
+使用"dataeda.ipynb"文件即可看到部分数据分析工作，感兴趣的可以在此基础上继续挖掘数据的特点。
+
+### 我想尝试更多的数据预处理工作
+目前程序是默认执行后文列举的预处理工作，如果想要添加其他的预处理工作，需要在"data_processer.py"中添加或修改数据处理的函数。
+
+## Project Structure
+### 目录结构：
 - data: 存放运行模型所需要的data  
 - code:   
 |- data_processer.py: 训练数据和中间数据、最后结构的生成  
@@ -21,24 +53,42 @@
 - resource: 部分工作的截图和记录  
 - modified code for models： 存放了修改过后的bert/elmo代码
 
-## 外部模型下载
-模型调用的外部模型需要在对应github仓库下载，并放置到对应目录中。
+### 外部模型下载
+**可以只下载想要使用的模型！**
+
+模型调用的外部模型需要在对应github仓库下载，并放置到对应目录中。  
 在这个仓库的modified code for models文件夹中，包括了我部分修改过的bert/elmo代码。如果需要运行模型，需要复制并覆盖外部模型的原文件。
 
-Just put following dir in /code:
-/ELMo
-/DAM
-/bert
-/bert/JDAI-BERT
-/bert/JDAI-WORD-EMBEDDIN1G
+Just put following dir in /code:  
+/ELMo  
+/DAM  
+/bert  
+/bert/JDAI-BERT  
+/JDAI-WORD-EMBEDDIN1G  
 
 ELMo:https://github.com/HIT-SCIR/ELMoForManyLangs  
 DAM:https://github.com/baidu/Dialogue/tree/master/DAM  
 bert:https://github.com/google-research/bert  
 JDAI-BERT， JDAI-WORD-EMBEDDIN1G:https://github.com/jd-aig/nlp_baai  
-SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch
+SMN_Pytorch：https://github.com/MaoGWLeon/SMN_Pytorch  
 
-Note: Please create a dir "out" in "/bert" for outputing
+Note:
+
+- dir "out" in "/bert" contains output files using multi turn dialog history
+- dir "out" in "/bert" contains output files without using history
+- "run_classifier1.py"是用来fine tuning的入口文件
+- "run_classifier.py"是模型会调用的代码文件，务必放置在“bert”文件夹下
+
+### 训练好的模型在哪里下载
+所有模型都可以使用数据在本地进行训练。
+
+对于bert模型，需要在"/code/bert"文件夹下输入`python run_classifier1.py`进行训练。对于bert模型，默认使用多轮对话模型。  
+
+Note：训练数据的生成可以仿照"data_processer.py"中的"generate_train_file_bert_single()"函数编写。  
+数据格式为`his1 /t his2 /t question /t answer/t label`
+
+### 项目的版本
+本项目建立在python3.6环境下，使用的package见py36_requirements.txt。  
 
 ## 数据EDA以及预处理
 ### EDA
@@ -64,8 +114,8 @@ No | Subtask Description
 4| Select the next response or NONE from a set of 100 choices that contains 0 or 1 correct response
 5| Select the next response from a set of 100 choices, given access to an external dataset
 
-对于本次大赛的检索式的对话模型，我们重点关注问题1和2——如何从大量对话数据中选取top k的少量候选数据？以及如何使用更加精准的重排（rerank）模型，从候选数据中选取最为匹配的答案。
-因此我们的检索式模型分为两大部分——粗筛模块和重排模块。
+对于本次大赛的检索式的对话模型，我们重点关注问题1和2——如何从大量对话数据中选取top k的少量候选数据？以及如何使用更加精准的重排（rerank）模型，从候选数据中选取最为匹配的答案。  
+因此我们的检索式模型分为两大部分——粗筛模块和重排模块。  
 而因为模型面临的场景是多轮会话，对于每个模块需要考虑是否引入历史信息。
 
 ### 粗筛模块

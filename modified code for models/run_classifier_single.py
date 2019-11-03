@@ -37,7 +37,7 @@ flags.DEFINE_string(
     "for the task.")
 
 flags.DEFINE_string(
-    "bert_config_file", "./code/bert/data/bert_config.json",
+    "bert_config_file", "./code/bert/JDAI-BERT/bert_config.json",
     "The config json file corresponding to the pre-trained BERT model. "
     "This specifies the model architecture.")
 
@@ -47,7 +47,7 @@ flags.DEFINE_string("vocab_file", "./code/bert/JDAI-BERT/vocab.txt",
                     "The vocabulary file that the BERT model was trained on.")
 
 flags.DEFINE_string(
-    "output_dir", "./code/bert/out",
+    "output_dir", "./code/bert/out_single",
     "The output directory where the model checkpoints will be written.")
 
 ## Other parameters

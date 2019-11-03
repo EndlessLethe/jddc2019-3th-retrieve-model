@@ -16,7 +16,8 @@ class RunModel():
     This Class is used to connect all components, such as embedding part for training,
     and search part, rerank part for predicting.
     """
-    def __init__(self, filepath_train, model_index):
+    def __init__(self, filepath_train, model_index, use_bert = True, use_history = True):
+
         """
         Args:
             filepath_train: the filepath of training data
@@ -30,7 +31,8 @@ class RunModel():
         self.model_loader = None
         self.dict_q_index_to_data_index = None
         self.data = self.load_data()
-
+        self.use_bert = use_bert
+        self.use_history = use_history
 
         ## data sent to EmbeddingModelLoader is only questions.
         self.list_is_picked = self.get_dict_q_index_to_data_index()
@@ -53,7 +55,7 @@ class RunModel():
     ## 先使用sentence2vec将需要匹配的句子传进去
     def list_sentence_to_corpus(self, list_sentence):
         if self.model_index == 6:
-            return self.model_loader.list_sentence_to_corpus_bert(list_sentence)
+            return self.model_loader.list_sentence_to_corpus_skipgram(list_sentence)
 
         list_sentece_cuted = []
         for sentence in list_sentence:
@@ -98,9 +100,10 @@ class RunModel():
 
     def get_list_q_candidate_index(self, session_list_q, k):
         """
-        list_q_candidate_index has a shape: n_q * k * 2
+        list_q_candidate_index has a shape: n_total_q * k * 2
             The last dim is (sentence index, similarity score)
-        So use reformat_list_q_candidate_indexto reformat.
+        So use reformat_list_q_candidate_index to reformat:
+            shape becomes (n_total_q * k)
         """
         list_q_candidate_index = []
         texts = []
@@ -139,12 +142,17 @@ class RunModel():
         return top_k
 
     def predict(self, filepath_input, filepath_result, k):
+        """
+        The shape of session_list_q is (n_session, n_q)
+        The shape of session_list_history is (n_session, n_history)
+        The shape of list_q_candidate_index (n_total_q, k)
+        """
         session_list_id, session_length, session_list_q, session_list_history = SessionProcesser.read_file(filepath_input)
 
         logging.debug("Num of sessions: " + str(len(session_list_id)))
-        logging.debug("Num of questions: " + str(len(session_list_q)))
-        logging.debug("Num of histories: " + str(len(session_list_history)))
-        logging.debug("histories: " + str(session_list_history))
+        # logging.debug("Num of questions: " + str(len(session_list_q)))
+        # logging.debug("Num of histories: " + str(len(session_list_history)))
+        # logging.debug("histories: " + str(session_list_history))
 
         ## get list_q_candidate and output to examine
         list_q_candidate_index = self.get_list_q_candidate_index(session_list_q, k)
@@ -161,28 +169,37 @@ class RunModel():
         self.output_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
         filepath_q_candidate = "./out/a_candidate.txt"
         self.output_candidate(list_a_candidate_index, session_list_q, filepath_q_candidate)
-        filepath_bert_predict = "./code/bert/data/test.tsv"
-        # self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
-        self.output_candidate_with_history(list_a_candidate_index, session_list_q, session_list_history, filepath_bert_predict)
 
         ## use unsupervised reranker
         list_q_index = self.get_unsupervised_reranker_result(list_q_candidate_index, k)
         logging.debug("list_q_index: " + str(list_q_index))
         list_answer = self.get_answer(list_q_index)
         list_question = self.get_sentence(list_q_index)
-        SessionProcesser.output_result_file_without_history("./out/ur_answer.txt", session_list_id, session_length, session_list_q, list_answer)
-        SessionProcesser.output_result_file_without_history("./out/ur_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-        SessionProcesser.output_result_file_without_history(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        SessionProcesser.output_result_file("./out/ur_answer.txt", session_list_id, session_length, session_list_q, list_answer)
+        SessionProcesser.output_result_file("./out/ur_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
+        SessionProcesser.output_result_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         ## use bert as reranker
-        from code.bert.run_classifier import run_classifier
-        run_classifier()
-        list_q_index = self.get_bert_q_index(list_q_candidate_index, k)
-        list_answer = self.get_answer(list_q_index)
-        list_question = self.get_sentence(list_q_index)
-        SessionProcesser.output_result_file_without_history("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
-        SessionProcesser.output_result_file_without_history("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-        SessionProcesser.output_result_file_without_history(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        if self.use_bert:
+            filepath_bert_predict = "./code/bert/data/test.tsv"
+            if not self.use_history:
+                logging.info("Bert classifier for single dialog is running.")
+                self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
+                from code.bert.run_classifier_single import run_classifier
+                # from code.bert.run_classifier import run_classifier
+                run_classifier()
+            else :
+                logging.info("Bert classifier for multi dialog is running.")
+                self.output_candidate_with_history(list_a_candidate_index, session_list_q, session_list_history,
+                                                   filepath_bert_predict)
+                from code.bert.run_classifier import run_classifier
+                run_classifier()
+            list_q_index = self.get_bert_q_index(list_q_candidate_index, k, self.use_history)
+            list_answer = self.get_answer(list_q_index)
+            list_question = self.get_sentence(list_q_index)
+            SessionProcesser.output_result_file("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
+            SessionProcesser.output_result_file("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
+            SessionProcesser.output_result_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
 
         # ## use task dialog to provide standar answer for matched questions
         # list_sessoin_id = []
@@ -197,8 +214,8 @@ class RunModel():
         #         list_answer_multi.append(list_answer_task[i])
         #     else:
         #         list_answer_multi.append(list_answer[i])
-        # SessionProcesser.output_result_file_without_history("./out/task_answer.txt", session_list_id, session_length, session_list_q, list_flag)
-        # SessionProcesser.output_result_file_without_history(filepath_result, session_list_id, session_length, session_list_q, list_answer_multi)
+        # SessionProcesser.output_result_file("./out/task_answer.txt", session_list_id, session_length, session_list_q, list_flag)
+        # SessionProcesser.output_result_file(filepath_result, session_list_id, session_length, session_list_q, list_answer_multi)
 
         return list_q_index, list_answer
 
@@ -245,6 +262,8 @@ class RunModel():
         return list_sentence
 
     def get_unsupervised_reranker_result(self, list_q_candidate_index, k):
+        logging.info("Unsupervised Reranker is running.")
+
         ur = UnsupervisedReranker()
         list_q_index = []
 
@@ -273,14 +292,19 @@ class RunModel():
         return list_new
 
     def output_candidate(self, list_q_candidate, session_list_q, filepath):
+        """
+        The shape of session_list_q is (n_session, n_q)
+        The shape of session_list_history is (n_session, n_history)
+        The shape of list_q_candidate_index (n_total_q, k)
+        """
         with open(filepath, "w", encoding="utf-8") as f_out:
-            # cnt = 0
+            cnt = 0
             for i in range(len(session_list_q)):
-                for k in range(len(session_list_q[i])):
-                    for j in range(len(list_q_candidate[i])):
-                        q_index = list_q_candidate[i][j]
-                        f_out.write(session_list_q[i][k] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
-                        # cnt += 1
+                for j in range(len(session_list_q[i])):
+                    for k in range(len(list_q_candidate[i])): # equals to top k
+                        q_index = list_q_candidate[cnt][k]
+                        f_out.write(session_list_q[i][j] + "\t" + self.data.iat[q_index, 0] + "\t0\n")
+                    cnt += 1
         logging.info("output candidate file as bert format to: " + filepath)
 
     def output_candidate_with_history(self, list_q_candidate, session_list_q, session_list_history, filepath):
@@ -295,7 +319,6 @@ class RunModel():
                 list_his.append(session_list_history[i][2])
                 list_his.append(session_list_history[i][4])
                 list_his.extend(session_list_q[i])
-                logging.debug(str(list_his))
                 for k in range(len(session_list_q[i])):
                     for j in range(len(list_q_candidate[i])):
                         h1 = list_his[k+1]
@@ -307,16 +330,19 @@ class RunModel():
                         f_out.write(h1 + "\t" + h2 + "\t" + h3 + "\t" + self.data.iat[q_index, 0] + "\t0\n")
         logging.info("output candidate file as bert format to: " + filepath)
 
-    def get_bert_q_index(self, list_q_candidate_index, k):
-        x_lable = self.get_bert_result(k)
+    def get_bert_q_index(self, list_q_candidate_index, k, use_history):
+        x_lable = self.get_bert_result(k, use_history)
         list_q_index = []
         for i in range(x_lable.shape[0]):
             list_q_index.append(list_q_candidate_index[i][x_lable[i]])
         return list_q_index
 
     @classmethod
-    def get_bert_result(cls, k):
-        filepath_bert_result = "./code/bert/out/test_results.tsv"
+    def get_bert_result(cls, k, use_history):
+        if use_history:
+            filepath_bert_result = "./code/bert/out/test_results.tsv"
+        else :
+            filepath_bert_result = "./code/bert/out_single/test_results.tsv"
 
         data_result = pd.read_csv(filepath_bert_result, header = None, sep = "\t")
         x_result = np.array(data_result[1])
