@@ -13,7 +13,7 @@ l_g = logging.getLogger()
 l_g.setLevel(logging.DEBUG)
 
 def main(filepath_quz, filepath_result):
-    filepath_train = "data/chat_0.1per.txt"
+    filepath_train = "data/chat_1per.txt"
     filepath_answer = "data/dev_answer.txt"
 
     if not os.path.exists(filepath_train):
@@ -27,7 +27,10 @@ def main(filepath_quz, filepath_result):
         ## get bert train file
         # DataProcesser.generate_train_file_bert_single()
 
-    rm = RunModel(filepath_train, 1, True, False)
+    ## __init__(self, filepath_train, model_index, use_bert = True, use_history = True)
+    # rm = RunModel(filepath_train, 6, False, True)
+    rm = RunModel(filepath_train, 6, True, True)
+    # rm = RunModel(filepath_train, 6, True, False)
 
     rm.fit()
     rm.predict(filepath_quz, filepath_result, k = 30)
@@ -35,8 +38,8 @@ def main(filepath_quz, filepath_result):
     re = ResultEvaluator("./out/ur_answer.txt", filepath_answer)
     print(re.eval_result())
 
-    # re = ResultEvaluator("./out/bert_answer.txt", filepath_answer)
-    # print(re.eval_result())
+    re = ResultEvaluator("./out/bert_answer.txt", filepath_answer)
+    print(re.eval_result())
 
     re = ResultEvaluator(filepath_result, filepath_answer)
     print(re.eval_result())

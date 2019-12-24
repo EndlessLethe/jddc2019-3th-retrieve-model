@@ -14,7 +14,7 @@ from code.rule_based_processor import process_question_list
 class RunModel():
     """
     This Class is used to connect all components, such as embedding part for training,
-    and search part, rerank part for predicting.
+    and retrieve part, re-rank part for predicting.
     """
     def __init__(self, filepath_train, model_index, use_bert = True, use_history = True):
 
@@ -45,7 +45,7 @@ class RunModel():
         return data_chat[[6]]
 
     def fit(self, num_topics = None):
-        ## "data/chat_0.1per.txt" and get "chat_0.1per"
+        ## filepath is like : "data/chat_0.1per.txt" and then get "chat_0.1per"
         input_name = self.filepath_train.split("/")[-1].replace(".txt", "")
         data_q = self.data[self.list_is_picked]
 
@@ -159,12 +159,7 @@ class RunModel():
         logging.debug("list_q_candidate_index: " + str(list_q_candidate_index))
         list_a_candidate_index = self.get_list_a_candidate_index(list_q_candidate_index)
 
-        ## output history and candidate data for smn and debugging
-        # filepath_smn_predict = "./out/smn_predict.tsv"
-        # self.output_predict_file_smn(list_a_candidate_index, session_list_id, session_length,
-        #                         session_list_q, session_list_history, filepath_smn_predict)
-
-        ## output candidate data for bert amd debugging
+        ## output candidate data for bert and debugging
         filepath_q_candidate = "./out/q_candidate.txt"
         self.output_candidate(list_q_candidate_index, session_list_q, filepath_q_candidate)
         filepath_q_candidate = "./out/a_candidate.txt"
@@ -175,33 +170,16 @@ class RunModel():
         logging.debug("list_q_index: " + str(list_q_index))
         list_answer = self.get_answer(list_q_index)
         list_question = self.get_sentence(list_q_index)
-        SessionProcesser.output_result_file("./out/ur_answer.txt", session_list_id, session_length, session_list_q, list_answer)
-        SessionProcesser.output_result_file("./out/ur_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-        SessionProcesser.output_result_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+        self.output_result("ur" , session_list_id, session_length, session_list_q, list_answer, list_question, filepath_result)
 
         ## use bert as reranker
         if self.use_bert:
-            filepath_bert_predict = "./code/bert/data/test.tsv"
-            if not self.use_history:
-                logging.info("Bert classifier for single dialog is running.")
-                self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
-                from code.bert.run_classifier_single import run_classifier
-                # from code.bert.run_classifier import run_classifier
-                run_classifier()
-            else :
-                logging.info("Bert classifier for multi dialog is running.")
-                self.output_candidate_with_history(list_a_candidate_index, session_list_q, session_list_history,
-                                                   filepath_bert_predict)
-                from code.bert.run_classifier import run_classifier
-                run_classifier()
-            list_q_index = self.get_bert_q_index(list_q_candidate_index, k, self.use_history)
-            list_answer = self.get_answer(list_q_index)
-            list_question = self.get_sentence(list_q_index)
-            SessionProcesser.output_result_file("./out/bert_answer.txt", session_list_id, session_length, session_list_q, list_answer)
-            SessionProcesser.output_result_file("./out/bert_qusetion.txt", session_list_id, session_length, session_list_q, list_question)
-            SessionProcesser.output_result_file(filepath_result, session_list_id, session_length, session_list_q, list_answer)
+            list_answer, list_question = self.run_bert(list_a_candidate_index, session_list_q, session_list_history,
+                          list_q_candidate_index, k)
+            self.output_result("bert" , session_list_id, session_length, session_list_q, list_answer, list_question, filepath_result)
 
-        # ## use task dialog to provide standar answer for matched questions
+
+        # ## use task dialog to provide standard answer for matched questions
         # list_sessoin_id = []
         # for i in range(len(session_list_id)):
         #     for j in range(session_length[i]):
@@ -218,6 +196,34 @@ class RunModel():
         # SessionProcesser.output_result_file(filepath_result, session_list_id, session_length, session_list_q, list_answer_multi)
 
         return list_q_index, list_answer
+
+    def run_bert(self, list_a_candidate_index, session_list_q, session_list_history,
+                 list_q_candidate_index, k):
+        # filepath_bert_predict = "./code/bert/data/test.tsv"
+        # if not self.use_history:
+        #     logging.info("Bert classifier for single dialog is running.")
+        #     self.output_candidate(list_a_candidate_index, session_list_q, filepath_bert_predict)
+        #     from code.bert.run_classifier_single import run_classifier
+        #     run_classifier()
+        # else:
+        #     logging.info("Bert classifier for multi dialog is running.")
+        #     self.output_candidate_with_history(list_a_candidate_index, session_list_q, session_list_history,
+        #                                        filepath_bert_predict)
+        #     from code.bert.run_classifier_multi import run_classifier
+        #     run_classifier()
+        list_q_index = self.get_bert_q_index(list_q_candidate_index, k, self.use_history)
+        list_answer = self.get_answer(list_q_index)
+        list_question = self.get_sentence(list_q_index)
+        return list_answer, list_question
+
+
+    def output_result(self, model_name, session_list_id, session_length, session_list_q, list_answer, list_question, filepath_result):
+        SessionProcesser.output_result_file("./out/" + model_name + "_answer.txt", session_list_id, session_length, session_list_q,
+                                            list_answer)
+        SessionProcesser.output_result_file("./out/" + model_name + "_qusetion.txt", session_list_id, session_length, session_list_q,
+                                            list_question)
+        SessionProcesser.output_result_file(filepath_result, session_list_id, session_length, session_list_q,
+                                            list_answer)
 
     def predict_single_task(self, question, k, predict_input_fn, estimator):
         session_list_q = []

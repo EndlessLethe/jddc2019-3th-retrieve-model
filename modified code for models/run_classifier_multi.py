@@ -433,12 +433,13 @@ def convert_single_example(ex_index, example, label_list, max_seq_length,
   tokens_c = tokenizer.tokenize(example.text_c)
   tokens_d = tokenizer.tokenize(example.text_d)
 
-  tokens_a.append("[ALP]")
+  tokens_a.append("[SEP]")
   tokens_a.extend(tokens_b)
-  tokens_a.append("[ALP]")
+  tokens_a.append("[SEP]")
   tokens_a.extend(tokens_c)
 
   tokens_b = tokens_d
+
 
   if tokens_b:
     # Modifies `tokens_a` and `tokens_b` in place so that the total
