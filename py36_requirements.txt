@@ -3,7 +3,7 @@ h5py==2.8.0
 overrides==1.9
 numpy==1.17.2
 setuptools==41.2.0
-tensorflow==1.14.0
+tensorflow==2.11.1
 matplotlib==2.2.3
 torch==0.4.1
 gensim==3.8.0
